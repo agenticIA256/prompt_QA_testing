@@ -85,15 +85,42 @@ DoD (Definition of Done — post-run)
 - E2E links ready for the Traceability Binder.  
 - All RAI rules respected.  
 
-#  Workflow / Steps 
-1. Clone & Scan: Clone the repository and identify key files (`composer.json`, `*.services.yml`, `modules/custom/`).
-2. Compliance Analysis: Detect PHP 8+ deprecations, use of `\Drupal::service()`, and core_version_requirement compatibility.
-3. CI/CD Audit: Exclusively identify Azure Pipelines configurations.
-4. Score Calculation: Generate a global weighted score on the technical health of the code.
-5. Artifact Generation: Write the `drupal11_audit_report.md` report and RAI logs.
-6. Closure: Produce the final `execution_log.json`.
+# Workflow / Steps
+1. Repository Acquisition  
+Clone the repository from `github_repo_url`.
+
+2. Repository Scan  
+Identify Drupal files (`composer.json`, `*.services.yml`, `modules/custom/`).
+
+3. Drupal 11 Compliance Analysis  
+Detect PHP 8+ deprecations, usage of `\Drupal::service()`, and verify `core_version_requirement`.
+
+4. CI/CD Audit  
+Detect Azure Pipelines configuration files.
+
+5. Score Calculation  
+Generate a weighted technical health score.
+
+6. Report Generation  
+Generate `drupal11_audit_report.md`.
+
+7. Execution Logging  
+Generate the mandatory `execution_log.json`.
  
-# Outputs / Artifacts 
-drupal11_audit_report.md: Executive summary, score, and recommendations.
-delta_score.json: Raw data for the next agent (`Delta Intelligence Agent`).
-execution_log.json: (Mandatory) Contains run_id, steps, errors, sci, outputs.
+# Outputs / Artifacts
+All artifacts are written to:
+./data/compliance/<timestamp>/
+
+Artifacts generated:
+drupal11_audit_report.md  
+Executive summary, score, and remediation recommendations.
+
+delta_score.json  
+Structured scoring data for the next agent (`Delta Intelligence Agent`).
+
+execution_log.json (Mandatory)
+Contains run_id, steps, errors, sci, outputs..
+
+# Return
+The agent returns the absolute path of the run directory:
+./data/compliance/<timestamp>/
