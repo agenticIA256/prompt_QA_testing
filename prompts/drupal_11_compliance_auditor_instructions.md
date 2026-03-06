@@ -134,10 +134,16 @@ Patterns to search for:
 \Drupal::service(
 \Drupal::entityTypeManager(
 ```
+For each occurrence, return:
+```
+file
+line
+code snippet
+recommendation
+```
 
-
-### 3.2 Module Metadata Validation
-Parse .info.yml files.
+### 3.3 Module Metadata Validation
+Parse all .info.yml files.
 
 Verify:
 ```
@@ -150,7 +156,7 @@ core: 8.x
 >=8
 ```
 
-### 3.3 Composer Dependency Analysis
+### 3.4 Composer Dependency Analysis
 Parse: 
 ```
 composer.json
@@ -160,52 +166,99 @@ Extract:
 * contrib modules
 * patches
 * composer plugins
+Verify compatibility with Drupal 11 and PHP 8+.
 
-### 3.4 CI/CD Configuration Detection
+### 3.5 CI/CD Configuration Detection
 Detect pipelines such as:
 ```
 azure-pipelines.yml
 .github/workflows/*.yml
 gitlab-ci.yml
 ```
+Report presence and note any pipelines that may not target Drupal 11 / PHP 8.1+.
 
-### 3.5 Generate Structured Results
+### 3.6 Routing & Controller Deprecation
+Scan:
+* `*.routing.yml` files
+* Deprecated hook_menu() implementations
+* Controllers using removed or legacy methods
+
+Report:
+```
+file
+line
+code snippet
+recommendation
+```
+
+### 3.7 Service Definitions
+Parse .services.yml files. Check for:
+* Deprecated class: references
+* Public services that should be private
+* Services using deprecated factory methods
+
+### 3.8 Event Subscribers & Hooks
+Detect usage of deprecated hooks or event subscriber patterns, including:
+* hook_form_alter() alternatives
+* Deprecated event subscriber interfaces
+
+### 3.9 Theme & Twig Compatibility
+Scan Twig templates for:
+* Deprecated functions or filters
+* Base theme inheritance issues
+
+### 3.10 PHP 8+ Compatibility
+Check all PHP files for:
+* Deprecated PHP functions
+* Type declaration issues
+* Syntax incompatible with PHP 8.1+
+
+### 3.11 Configuration & Settings
+Check config/install and config/optional:
+* Deprecated keys
+* Outdated YAML structure
+* Invalid configuration for Drupal 11
+
+### 3.12 Translation & Locale
+Verify proper use of:
+* t() function or TranslatableMarkup objects
+* Deprecated locale handling functions
+
+### 3.13 Automated Tests
+Check that any PHPUnit, Kernel, or functional tests:
+* Run successfully on Drupal 11
+* Use compatible dependencies
+* Do not rely on deprecated APIs
+  
+### 3.14 Generate Structured Results
 Python analysis scripts must generate:
 ```
 analysis_results.json
 ```
-This file contains the raw findings produced by static analysis.
+Structure example:
+```json
+{
+  "deprecated_api": [],
+  "dependency_injection": [],
+  "module_metadata": [],
+  "composer_dependencies": [],
+  "cicd": [],
+  "routing_deprecations": [],
+  "service_definitions": [],
+  "event_subscribers": [],
+  "twig_issues": [],
+  "php_compatibility": [],
+  "config_issues": [],
+  "translation_issues": [],
+  "test_issues": []
+}
+```
 
-## Analysis Rules
-### Evidence Requirement 
-Every finding MUST include:
-```
-file path
-line number
-code snippet
-```
-
-Example:
-```
-File: docroot/modules/custom/tremblant_core/tremblant_core.module
-Line: 143
-
-Code:
-$formated_motivation = Unicode::truncate($text, 160);
-```
-Findings without evidence must be discarded.
-
-### Severity Classification
-Findings must use severity levels instead of numeric scores:
-```
-CRITICAL
-HIGH
-MEDIUM
-LOW
-INFO
-```
-No arbitrary technical health score is allowed.
-
+Rules for all sub-analyses:
+* Evidence requirement: file path, line number, code snippet
+* Severity classification: CRITICAL, HIGH, MEDIUM, LOW, INFO
+* Recommendations: Include explicit fix suggestions where possible
+  
 ## Step 4 — Report Generation
 Generate the human-readable audit report: drupal11_audit_report.md
 
