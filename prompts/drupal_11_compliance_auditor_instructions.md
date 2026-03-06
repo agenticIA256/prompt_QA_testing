@@ -275,8 +275,9 @@ All findings must reference evidence (file path, line number, snippet).
 
 ## Step 4.1 — Human Validation (HITL via file)
 - After report generation, create a file to track human approval:
-
+```
 hitl_status.json
+```
 
 - Initial content:
 ```json
