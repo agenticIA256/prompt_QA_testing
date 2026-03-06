@@ -111,9 +111,11 @@ Use deterministic analysis to detect:
 
 ## Deprecated API patterns
 Search patterns such as:
+```
 Unicode::
 \Drupal::service(
 \Drupal::entityTypeManager(
+```
 
 Return:
 file
