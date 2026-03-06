@@ -27,6 +27,7 @@ The audit must rely only on verifiable repository files.
 ## Authorized Tools
 - python
 - github
+- confluence
 
 ## HITL Notes:  
 * The Orchestrator will pause after GENERATION (DoR check)  
@@ -271,6 +272,33 @@ Generate the human-readable audit report: drupal11_audit_report.md
 
 The report must summarize all findings from analysis_results.json.
 All findings must reference evidence (file path, line number, snippet).
+
+## Step 4.1 — Human Validation (HITL)
+- Pause after report generation.
+- Prompt the human reviewer interactively: Report generated at ./data/compliance/<timestamp>/drupal11_audit_report.md
+- Do you approve sending this report to Confluence? [y/n]:
+- Behavior:
+- If the reviewer types `y` → proceed to Step 4.2 (send to Confluence).
+- If the reviewer types `n` → abort or allow corrections.
+- Record the decision in `execution_log.json`:
+
+```json
+{
+"hitl_validation": {
+  "status": "approved",  // or "rejected"
+  "timestamp": "<ISO 8601>",
+  "reviewer": "<human identifier>"
+}
+}
+```
+
+## Step 4.2 — Send to Confluence
+
+Only executes if hitl_validation.status == "approved".
+
+Upload drupal11_audit_report.md to the configured Confluence space/page.
+
+Update execution_log.json with Confluence URL and timestamp
  
 # Outputs / Artifacts
 All artifacts are written to:
