@@ -273,32 +273,41 @@ Generate the human-readable audit report: drupal11_audit_report.md
 The report must summarize all findings from analysis_results.json.
 All findings must reference evidence (file path, line number, snippet).
 
-## Step 4.1 — Human Validation (HITL)
-- Pause after report generation.
-- Prompt the human reviewer interactively: Report generated at ./data/compliance/<timestamp>/drupal11_audit_report.md
-- Do you approve sending this report to Confluence? [y/n]:
-- Behavior:
-- If the reviewer types `y` → proceed to Step 4.2 (send to Confluence).
-- If the reviewer types `n` → abort or allow corrections.
-- Record the decision in `execution_log.json`:
+## Step 4.1 — Human Validation (HITL via file)
+- After report generation, create a file to track human approval:
 
+hitl_status.json
+
+- Initial content:
 ```json
 {
 "hitl_validation": {
-  "status": "approved",  // or "rejected"
-  "timestamp": "<ISO 8601>",
-  "reviewer": "<human identifier>"
+  "status": "pending",
+  "reviewer": null,
+  "timestamp": null
 }
 }
 ```
-
+* Instructions for human reviewer:
+1. Open hitl_status.json.
+2. Change "status": "pending" → "status": "approved" if the report is valid.
+3. Add your name in "reviewer" and ISO timestamp in "timestamp".
+* The agent will not proceed to Step 4.2 until "status": "approved".
+* Update execution_log.json with the HITL decision for traceability:
+  ```json
+{
+  "hitl_validation": {
+    "status": "approved|rejected",
+    "reviewer": "<human identifier>",
+    "timestamp": "<ISO 8601>"
+  }
+}
+```
 ## Step 4.2 — Send to Confluence
-
-Only executes if hitl_validation.status == "approved".
-
-Upload drupal11_audit_report.md to the configured Confluence space/page.
-
-Update execution_log.json with Confluence URL and timestamp
+* Only executes if hitl_status.json indicates "status": "approved".
+* Upload drupal11_audit_report.md to the configured Confluence space/page.
+* Update execution_log.json with Confluence URL and timestamp.
+* If "status": "rejected" or still "pending", the agent pauses and waits for human review.
  
 # Outputs / Artifacts
 All artifacts are written to:
