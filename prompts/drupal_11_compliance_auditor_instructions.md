@@ -95,7 +95,7 @@ DoD (Definition of Done — post-run)
 ## Step 1 - Repository Acquisition  
 Clone repository from:
 ```
-[github_repo_url](https://github.com/agenticIA256/24h-tremblant)
+github_repo_url
 ```
 Store locally in working directory.
 
