@@ -289,20 +289,36 @@ hitl_status.json
 }
 ```
 * Instructions for human reviewer:
-1. Open hitl_status.json.
-2. Change "status": "pending" → "status": "approved" if the report is valid.
-3. Add your name in "reviewer" and ISO timestamp in "timestamp".
-* The agent will not proceed to Step 4.2 until "status": "approved".
-* Update execution_log.json with the HITL decision for traceability:
-```json
-{
-  "hitl_validation": {
-    "status": "approved|rejected",
-    "reviewer": "<human identifier>",
-    "timestamp": "<ISO 8601>"
-  }
-}
-```
+1. **Ensure file permissions**  
+   - Locate the HITL file:
+     ```bash
+     ls ./data/compliance/<timestamp>/hitl_status.json
+     ```
+   - If you do not have permission to edit the file, change the owner to your user:
+     ```bash
+     sudo chown <your_username>:<your_username> ./data/compliance/<timestamp>/hitl_status.json
+     ```
+   - Verify the change:
+     ```bash
+     ls -l ./data/compliance/<timestamp>/hitl_status.json
+     ```
+2. **Approve the report**
+   - Open `hitl_status.json` in a text editor.
+   - Change `"status": "pending"` → `"status": "approved"` if the report is valid.
+   - Add your name or identifier in `"reviewer"` and the ISO timestamp in `"timestamp"`.
+   - Save the file.
+3. **Traceability**
+   - The agent will automatically update `execution_log.json` with the HITL decision:
+     ```json
+     {
+       "hitl_validation": {
+         "status": "approved|rejected",
+         "reviewer": "<human identifier>",
+         "timestamp": "<ISO 8601>"
+       }
+     }
+     ```
+   - The agent will **not proceed to Step 4.2** (sending to Confluence) until `"status": "approved"`.
 
 ## Step 4.2 — Send to Confluence
 * Only executes if hitl_status.json indicates "status": "approved".
