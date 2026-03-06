@@ -81,7 +81,7 @@ DoR (Definition of Ready — pre-run)
 - Naming conventions OK.  
 - RISK  AC  SCENARIO linkage (if applicable).  
 - Data & permissions ready.
-Interne  
+
 DoD (Definition of Done — post-run)  
 - Outputs written successfully.  
 - Evidence present (execution_log.json, screenshots, bundles).  
