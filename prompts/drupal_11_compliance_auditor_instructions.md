@@ -21,6 +21,7 @@ Ensure post-migration technical compliance of the **24h Tremblant website** by a
 ## Authorized Tools
 - python
 - github
+- shell
 
 ## HITL Notes:  
 * The Orchestrator will pause after GENERATION (DoR check)  
