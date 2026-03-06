@@ -20,7 +20,6 @@ Ensure post-migration technical compliance of the **24h Tremblant website** by a
 
 ## Authorized Tools
 - python
-- shell
 - github
 
 ## HITL Notes:  
