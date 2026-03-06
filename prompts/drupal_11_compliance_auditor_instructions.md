@@ -92,11 +92,11 @@ DoD (Definition of Done — post-run)
 - All RAI rules respected.  
 
 # Workflow / Steps
-Step 1 - Repository Acquisition  
+## Step 1 - Repository Acquisition  
 Clone repository from: github_repo_url
 Store locally in working directory.
 
-Step 2 - Repository Scan  
+## Step 2 - Repository Scan  
 Identify key Drupal files:
 composer.json
 composer.lock
@@ -106,10 +106,13 @@ modules/custom/
 themes/custom/
 Create file index.
 
-Step 3 — Static Code Analysis (Python)
-Use deterministic analysis to detect:
+## Step 3 — Static Code Analysis (Python)
+All sub-analyses must be performed using Python static analysis.  
+The LLM must only summarize results returned by the analysis scripts.
 
-## Deprecated API patterns
+This step performs several deterministic analyses on the repository.
+
+### 3.1 Deprecated API Detection
 Search patterns such as:
 ```
 Unicode::
@@ -117,14 +120,14 @@ Unicode::
 \Drupal::entityTypeManager(
 ```
 
-Return:
+For each occurrence return:
 ```
 file
 line
 code snippet
 ```
 
-## Module metadata validation
+### 3.2 Module Metadata Validation
 Parse .info.yml files.
 
 Verify:
@@ -138,7 +141,7 @@ core: 8.x
 >=8
 ```
 
-## Composer dependency analysis
+### 3.3 Composer Dependency Analysis
 Parse: 
 ```
 composer.json
@@ -149,15 +152,23 @@ Extract:
 * patches
 * composer plugins
 
-## CI/CD detection
+### 3.4 CI/CD Configuration Detection
 Detect pipelines such as:
 ```
 azure-pipelines.yml
-github workflows
+.github/workflows/*.yml
 gitlab-ci.yml
 ```
 
-## Evidence Requirement (Critical)
+### 3.5 Generate Structured Results
+Python analysis scripts must generate:
+```
+analysis_results.json
+```
+This file contains the raw findings produced by static analysis.
+
+## Analysis Rules
+### Evidence Requirement 
 Every finding MUST include:
 ```
 file path
@@ -175,7 +186,7 @@ $formated_motivation = Unicode::truncate($text, 160);
 ```
 Findings without evidence must be discarded.
 
-## Severity Classification
+### Severity Classification
 Findings must use severity levels instead of numeric scores:
 ```
 CRITICAL
@@ -186,24 +197,11 @@ INFO
 ```
 No arbitrary technical health score is allowed.
 
-## Report Generation
-Generate:
-```
-drupal11_audit_report.md
-```
+## Step 4 — Report Generation
+Generate the human-readable audit report: drupal11_audit_report.md
 
-Structure:
-```
-Executive Summary
-Repository Overview
-Critical Findings
-High Risk Findings
-Medium Findings
-Low Findings
-Recommendations
-Evidence Appendix
-```
-All findings must reference evidence.
+The report must summarize all findings from analysis_results.json.
+All findings must reference evidence (file path, line number, snippet).
  
 # Outputs / Artifacts
 All artifacts are written to:
@@ -214,25 +212,36 @@ All artifacts are written to:
 Generated files:
 ```
 drupal11_audit_report.md
-execution_log.json
+    Human-readable audit report.
+
 analysis_results.json
+    Raw structured results produced by Python static analysis.
+
+execution_log.json
+    Execution metadata and audit trace of the analysis workflow.
 ```
 
-## analysis_results.json (NEW)
-Structured output from static analysis.
+## analysis_results.json
+
+Structured output produced by Python static analysis scripts.
+
+The LLM must not generate or modify this file.
+It can only read and summarize its content when generating the audit report.
 
 Example:
 ```json
 {
- "deprecated_api": [
-  {
-   "file": "tremblant_core.module",
-   "line": 143,
-   "pattern": "Unicode::truncate"
-  }
- ],
- "module_metadata": [],
- "cicd": []
+  "deprecated_api": [
+    {
+      "file": "tremblant_core.module",
+      "line": 143,
+      "pattern": "Unicode::truncate",
+      "snippet": "Unicode::truncate($text, 160)"
+    }
+  ],
+  "module_metadata": [],
+  "composer_dependencies": [],
+  "cicd": []
 }
 ```
 
