@@ -288,21 +288,7 @@ hitl_status.json
 }
 }
 ```
-* Instructions for human reviewer:
-1. Open hitl_status.json.
-2. Change "status": "pending" → "status": "approved" if the report is valid.
-3. Add your name in "reviewer" and ISO timestamp in "timestamp".
-* The agent will not proceed to Step 4.2 until "status": "approved".
-* Update execution_log.json with the HITL decision for traceability:
-```json
-{
-  "hitl_validation": {
-    "status": "approved|rejected",
-    "reviewer": "<human identifier>",
-    "timestamp": "<ISO 8601>"
-  }
-}
-```
+
 ## Step 4.2 — Send to Confluence
 * Only executes if hitl_status.json indicates "status": "approved".
 * Upload drupal11_audit_report.md to the configured Confluence space/page.
