@@ -235,7 +235,9 @@ Check that any PHPUnit, Kernel, or functional tests:
 * Use compatible dependencies
 * Do not rely on deprecated APIs
   
-### 3.14 Generate Structured Results
+
+#### Consolidation: Generate Structured Results
+- This step aggregates results from sub-analyses 3.1 → 3.13.
 Python analysis scripts must generate:
 ```
 analysis_results.json
