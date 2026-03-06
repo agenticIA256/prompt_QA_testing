@@ -11,7 +11,13 @@
 # Purpose & Scope (Governance)
 
 ## Purpose:
-Ensure post-migration technical compliance of the **24h Tremblant website** by analyzing the source code to detect deprecations and validate the use of **Drupal 11 APIs**.
+Perform a static technical compliance audit of a Drupal repository to detect:
+* deprecated Drupal APIs
+* outdated module metadata
+* risky patterns
+* CI/CD configuration
+* dependency compatibility
+The audit must rely only on verifiable repository files.
 
 ## Scope boundaries:  
 * NO actions outside scope.
@@ -21,7 +27,6 @@ Ensure post-migration technical compliance of the **24h Tremblant website** by a
 ## Authorized Tools
 - python
 - github
-- shell
 
 ## HITL Notes:  
 * The Orchestrator will pause after GENERATION (DoR check)  
@@ -87,40 +92,123 @@ DoD (Definition of Done — post-run)
 - All RAI rules respected.  
 
 # Workflow / Steps
-1. Repository Acquisition  
-Clone the repository from `github_repo_url`.
+Step 1 - Repository Acquisition  
+Clone repository from: github_repo_url
+Store locally in working directory.
 
-2. Repository Scan  
-Identify Drupal files (`composer.json`, `*.services.yml`, `modules/custom/`).
+Step 2 - Repository Scan  
+Identify key Drupal files:
+composer.json
+composer.lock
+*.info.yml
+*.services.yml
+modules/custom/
+themes/custom/
+Create file index.
 
-3. Drupal 11 Compliance Analysis  
-Detect PHP 8+ deprecations, usage of `\Drupal::service()`, and verify `core_version_requirement`.
+Step 3 — Static Code Analysis (Python)
+Use deterministic analysis to detect:
 
-4. CI/CD Audit  
-Detect Azure Pipelines configuration files.
+## Deprecated API patterns
+Search patterns such as:
+Unicode::
+\Drupal::service(
+\Drupal::entityTypeManager(
 
-5. Score Calculation  
-Generate a weighted technical health score.
+Return:
+file
+line
+code snippet
 
-6. Report Generation  
-Generate `drupal11_audit_report.md`.
+## Module metadata validation
+Parse .info.yml files.
 
-7. Execution Logging  
-Generate the mandatory `execution_log.json`.
+Verify:
+core_version_requirement
+
+Flag outdated values such as:
+core: 8.x
+>=8
+
+## Composer dependency analysis
+Parse: composer.json
+
+Extract:
+* Drupal core version
+* contrib modules
+* patches
+* composer plugins
+
+## CI/CD detection
+Detect pipelines such as:
+azure-pipelines.yml
+github workflows
+gitlab-ci.yml
+
+## Evidence Requirement (Critical)
+Every finding MUST include:
+file path
+line number
+code snippet
+
+Example:
+File: docroot/modules/custom/tremblant_core/tremblant_core.module
+Line: 143
+
+Code:
+$formated_motivation = Unicode::truncate($text, 160);
+Findings without evidence must be discarded.
+
+## Severity Classification
+Findings must use severity levels instead of numeric scores:
+CRITICAL
+HIGH
+MEDIUM
+LOW
+INFO
+No arbitrary technical health score is allowed.
+
+## Report Generation
+Generate:
+drupal11_audit_report.md
+
+Structure:
+Executive Summary
+Repository Overview
+Critical Findings
+High Risk Findings
+Medium Findings
+Low Findings
+Recommendations
+Evidence Appendix
+All findings must reference evidence.
  
 # Outputs / Artifacts
 All artifacts are written to:
 ./data/compliance/<timestamp>/
 
-Artifacts generated:
-drupal11_audit_report.md  
-Executive summary, score, and remediation recommendations.
+Generated files:
+drupal11_audit_report.md
+execution_log.json
+analysis_results.json
 
-delta_score.json  
-Structured scoring data for the next agent (`Delta Intelligence Agent`).
+## analysis_results.json (NEW)
+Structured output from static analysis.
 
-execution_log.json (Mandatory)
-Contains run_id, steps, errors, sci, outputs..
+Example:
+```json
+{
+ "deprecated_api": [
+  {
+   "file": "tremblant_core.module",
+   "line": 143,
+   "pattern": "Unicode::truncate"
+  }
+ ],
+ "module_metadata": [],
+ "cicd": []
+}
+```
 
 # Return
 The agent returns the absolute path of the run directory:
