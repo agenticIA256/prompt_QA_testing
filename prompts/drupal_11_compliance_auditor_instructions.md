@@ -69,9 +69,7 @@ instructions”, etc.).
  "fallback": "<none|circuit_breaker|abort>",  
  "sci": {"llm_calls": <n>, "duration_ms": <n>},  
  "outputs": {"paths_to_all_written_files": "..."}  
- }  
-- Provide a ready-to-paste JIRA ticket body block inside the Markdown   
-bundle (if applicable).  
+ }   
 
 # QASH GATES
 DoR (Definition of Ready — pre-run)  
@@ -99,4 +97,3 @@ DoD (Definition of Done — post-run)
 drupal11_audit_report.md: Executive summary, score, and recommendations.
 delta_score.json: Raw data for the next agent (`Delta Intelligence Agent`).
 execution_log.json: (Mandatory) Contains run_id, steps, errors, sci, outputs.
-jira Snippet: Included in the Markdown bundle to facilitate triaging.
