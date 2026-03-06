@@ -63,5 +63,5 @@ Produire un bloc corps de ticket JIRA prêt à copier-coller dans le rapport fin
 # 6. Outputs / Artefacts
 drupal11_audit_report.md : Résumé exécutif, score, et recommandations.
 delta_score.json : Données brutes pour l'agent suivant (Delta Intelligence Agent).
-eecution_log.json : *(Obligatoire)* Contient run_id, steps, errors, sci, outputs.
+execution_log.json : *(Obligatoire)* Contient run_id, steps, errors, sci, outputs.
 jira Snippet : Inclus dans le bundle Markdown pour faciliter le triage.
