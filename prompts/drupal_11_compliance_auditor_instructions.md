@@ -294,7 +294,7 @@ hitl_status.json
 3. Add your name in "reviewer" and ISO timestamp in "timestamp".
 * The agent will not proceed to Step 4.2 until "status": "approved".
 * Update execution_log.json with the HITL decision for traceability:
-  ```json
+```json
 {
   "hitl_validation": {
     "status": "approved|rejected",
