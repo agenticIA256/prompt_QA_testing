@@ -127,6 +127,15 @@ line
 code snippet
 ```
 
+### 3.2 Dependency Injection Check
+Identify static service calls that should use Dependency Injection.
+Patterns to search for:
+```
+\Drupal::service(
+\Drupal::entityTypeManager(
+```
+
+
 ### 3.2 Module Metadata Validation
 Parse .info.yml files.
 
