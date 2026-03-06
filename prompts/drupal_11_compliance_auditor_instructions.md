@@ -93,17 +93,22 @@ DoD (Definition of Done — post-run)
 
 # Workflow / Steps
 ## Step 1 - Repository Acquisition  
-Clone repository from: github_repo_url
+Clone repository from:
+```
+github_repo_url
+```
 Store locally in working directory.
 
 ## Step 2 - Repository Scan  
 Identify key Drupal files:
+```
 composer.json
 composer.lock
 *.info.yml
 *.services.yml
 modules/custom/
 themes/custom/
+```
 Create file index.
 
 ## Step 3 — Static Code Analysis (Python)
