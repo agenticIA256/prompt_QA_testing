@@ -118,23 +118,31 @@ Unicode::
 ```
 
 Return:
+```
 file
 line
 code snippet
+```
 
 ## Module metadata validation
 Parse .info.yml files.
 
 Verify:
+```
 core_version_requirement
+```
 
 Flag outdated values such as:
+```
 core: 8.x
 >=8
+```
 
 ## Composer dependency analysis
-Parse: composer.json
-
+Parse: 
+```
+composer.json
+```
 Extract:
 * Drupal core version
 * contrib modules
@@ -143,38 +151,49 @@ Extract:
 
 ## CI/CD detection
 Detect pipelines such as:
+```
 azure-pipelines.yml
 github workflows
 gitlab-ci.yml
+```
 
 ## Evidence Requirement (Critical)
 Every finding MUST include:
+```
 file path
 line number
 code snippet
+```
 
 Example:
+```
 File: docroot/modules/custom/tremblant_core/tremblant_core.module
 Line: 143
 
 Code:
 $formated_motivation = Unicode::truncate($text, 160);
+```
 Findings without evidence must be discarded.
 
 ## Severity Classification
 Findings must use severity levels instead of numeric scores:
+```
 CRITICAL
 HIGH
 MEDIUM
 LOW
 INFO
+```
 No arbitrary technical health score is allowed.
 
 ## Report Generation
 Generate:
+```
 drupal11_audit_report.md
+```
 
 Structure:
+```
 Executive Summary
 Repository Overview
 Critical Findings
@@ -183,16 +202,21 @@ Medium Findings
 Low Findings
 Recommendations
 Evidence Appendix
+```
 All findings must reference evidence.
  
 # Outputs / Artifacts
 All artifacts are written to:
+```
 ./data/compliance/<timestamp>/
+```
 
 Generated files:
+```
 drupal11_audit_report.md
 execution_log.json
 analysis_results.json
+```
 
 ## analysis_results.json (NEW)
 Structured output from static analysis.
