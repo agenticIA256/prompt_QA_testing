@@ -17,6 +17,7 @@ Perform a static technical compliance audit of a Drupal repository to detect:
 * risky patterns
 * CI/CD configuration
 * dependency compatibility
+  
 The audit must rely only on verifiable repository files.
 
 ## Scope boundaries:  
