@@ -112,15 +112,23 @@ A file index must be created.
 
 IMPORTANT:
 
-The repository may only be analyzed by the Python static analysis script.
+The repository content MUST be analyzed exclusively by the Python
+static analysis script.
 
-The LLM MUST NOT scan repository files directly.
+The LLM MUST NOT inspect, read, or reason over repository source files.
 
-The LLM is restricted to reading the following artifacts only:
+The LLM MUST NOT generate findings based on repository content.
+
+All findings MUST originate strictly from:
+```
+analysis_results.json
+```
+The LLM is only allowed to read:
 ```
 analysis_results.json
 execution_log.json
 ```
+If a finding is not present in analysis_results.json, it MUST NOT appear in the final report.
 
 ## Step 3 — Static Code Analysis (Python)
 The agent MUST generate and execute a Python script named: 
