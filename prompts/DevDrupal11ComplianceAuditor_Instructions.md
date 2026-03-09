@@ -110,25 +110,18 @@ themes/custom/
 ```
 A file index must be created.
 
-IMPORTANT:
-
-The repository content MUST be analyzed exclusively by the Python
-static analysis script.
-
-The LLM MUST NOT inspect, read, or reason over repository source files.
-
-The LLM MUST NOT generate findings based on repository content.
-
-All findings MUST originate strictly from:
-```
-analysis_results.json
-```
-The LLM is only allowed to read:
+**IMPORTANT: Deterministic & LLM Restrictions**
+* The repository content MUST be analyzed exclusively by the Python static analysis script.
+* The LLM MUST NOT inspect, read, parse, or reason over any repository source files.
+* The LLM MUST NOT generate findings, recommendations, or severities based on repository content.
+* All findings must originate strictly from analysis_results.json.
+* The LLM is only allowed to read:
 ```
 analysis_results.json
 execution_log.json
 ```
-If a finding is not present in analysis_results.json, it MUST NOT appear in the final report.
+* Findings not present in analysis_results.json MUST NOT appear in the final report.
+* **Deterministic constraint**: findings in analysis_results.json must be used as-is, in the order they appear (or sorted by file path → line number). The LLM must not reorder or regroup findings.
 
 ## Step 3 — Static Code Analysis (Python)
 The agent MUST generate and execute a Python script named: 
@@ -136,75 +129,40 @@ The agent MUST generate and execute a Python script named:
 analyze_drupal_repo.py
 ```
 This script performs all static analyses (3.1 → 3.13) on the Drupal repository.
-The script MUST:
-  1. Traverse the repository recursively.
-  2. Detect patterns using regex or structured parsing
-  3. Produce deterministic findings
-  4. Write all results to analysis_results.json
-The script MUST run locally and MUST NOT use any LLM reasoning.
 
-**Script Interface**
-The script MUST accept one argument:
-```
-python tools/analyze_drupal_repo.py <repository_path>
-```
-Example:
-```
-python tools/analyze_drupal_repo.py ./repo
-```
-
-**Repository Traversal Rules**
-The script MUST scan the following file types:
-```
-.php
-.module
-.install
-.theme
-.inc
-.yml
-.yaml
-.json
-.twig
-```
-The script MUST ignore:
-```
-vendor/
-node_modules/
-.git/
-```
-
-**Sub-analyses (3.1 → 3.13)**
-The script MUST implement one function per analysis:
-```
-run_analysis_3_1()
-run_analysis_3_2()
-...
-run_analysis_3_13()
-```
-
-Analyses:
-* 3.1 Deprecated API Detection
-* 3.2 Dependency Injection Check
-* 3.3 Module Metadata Validation
-* 3.4 Composer Dependency Analysis
-* 3.5 CI/CD Configuration Detection
-* 3.6 Routing & Controller Deprecation
-* 3.7 Service Definitions
-* 3.8 Event Subscribers & Hooks
-* 3.9 Theme & Twig Compatibility
-* 3.10 PHP 8+ Compatibility
-* 3.11 Configuration & Settings
-* 3.12 Translation & Locale
-* 3.13 Automated Tests
-Each analysis appends findings to a shared list.
-
-**Output Format**
-The script MUST generate:
+**Requirements & Restrictions:**
+**1. Deterministic analysis only**
+  * The script MUST traverse the repository recursively.
+  * Only scan files with extensions:
+    ```
+    .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
+    ```
+  * Ignore directories:
+    ```
+    vendor/, node_modules/, .git/, core/
+    ```
+  * No randomness; no external API calls; no LLM reasoning.
+**2. Analysis Modules (3.1 → 3.13)**
+Each analysis appends findings to a shared list:
+  * run_analysis_3_1() — Deprecated API Detection
+  * run_analysis_3_2() — Dependency Injection Check
+  * run_analysis_3_3() — Module Metadata Validation
+  * run_analysis_3_4() — Composer Dependency Analysis
+  * run_analysis_3_5() — CI/CD Configuration Detection
+  * run_analysis_3_6() — Routing & Controller Deprecation
+  * run_analysis_3_7() — Service Definitions
+  * run_analysis_3_8() — Event Subscribers & Hooks
+  * run_analysis_3_9() — Theme & Twig Compatibility
+  * run_analysis_3_10() — PHP 8+ Compatibility
+  * run_analysis_3_11() — Configuration & Settings
+  * run_analysis_3_12() — Translation & Locale
+  * run_analysis_3_13() — Automated Tests
+**3. Output Format**
+* Generate a single deterministic file:
 ```
 analysis_results.json
 ```
-
-Structure:
+* Structure:
 ```json
 {
   "repository": "",
@@ -212,8 +170,7 @@ Structure:
   "findings": []
 }
 ```
-
-Each finding MUST follow:
+* Each finding MUST include:
 ```json
 {
   "analysis": "3.1",
@@ -225,18 +182,16 @@ Each finding MUST follow:
   "recommendation": ""
 }
 ```
-
-**Deterministic Constraints**
-The script MUST:
-* never use randomness
-* never call external APIs
-* never use LLM reasoning
-* only rely on static code inspection
-Findings MUST be sorted by:
-```
-file → line
-```
-before writing analysis_results.json.
+* Findings MUST be sorted by file → line before writing.
+**4. LLM Restrictions**
+  * The LLM MUST **not inspect repository files.**
+  * The LLM MUST **not generate, infer, or modify findings**
+  * The LLM MAY read **only:**
+    ```
+    analysis_results.json
+    execution_log.json
+    ```
+  * All reporting, grouping, or summaries in Markdown MUST strictly reflect analysis_results.json.
 
 ### 3.1 Deprecated API Detection
 
@@ -458,7 +413,7 @@ analysis_results.json.
 
 The LLM MUST NOT create new findings during this step.
 
-### Step 4.1 — Define severity weights and total findings
+### 4.1 — Define severity weights and total findings
 ```python
 # Severity weights
 severity_weights = {
@@ -473,13 +428,13 @@ severity_weights = {
 total_findings = len(analysis_results['findings'])
 ```
 
-### Step 4.2 — Observed points
+### 4.2 — Observed points
 ```python
 observed_points = sum(severity_weights.get(f['severity'].lower(), 0) 
                       for f in analysis_results['findings'])
 ```
 
-### Step 4.3 — Compliance score calculation
+### 4.3  — Compliance score calculation
 ```python
 # Protection contre division par zéro
 if total_findings == 0:
@@ -488,13 +443,14 @@ else:
     maximum_possible_points = total_findings * 5
     compliance_score = 100 * (1 - (observed_points / maximum_possible_points))
 ```
+* The calculated compliance_score MUST be written to execution_log.json.
+* The LLM may read this value and include a summary in the Markdown report.
+* The LLM MUST NOT recalculate or modify the score independently.
 
-The calculated compliance_score MUST be written to:
-```
-execution_log.json
-```
-
-The LLM may only read this value and include a summary in the Markdown report.
+### 4.4 — Reporting Constraints
+* All findings MUST be directly copied or summarized from analysis_results.json.
+* The LLM cannot add examples, code snippets, or findings not present in the JSON.
+* Grouping, categorization, or Markdown formatting is allowed only for readability, not content generation.
 
 ## Step 5 – HITL
 * Create hitl_status.json:
