@@ -148,7 +148,7 @@ Search for deprecated or discouraged Drupal API usage.
 
 Search patterns such as:
 
-# Static service calls (should use Dependency Injection)
+**Static service calls (should use Dependency Injection)**
 ```
 \Drupal::service(
 \Drupal::entityTypeManager(
@@ -157,7 +157,7 @@ Search patterns such as:
 \Drupal::request(
 ```
 
-# Deprecated procedural APIs
+**Deprecated procedural APIs**
 ```
 drupal_set_message(
 drupal_get_path(
@@ -166,52 +166,52 @@ drupal_add_js(
 drupal_add_css(
 ```
 
-# Deprecated menu system
+**Deprecated menu system**
 ```
 hook_menu(
 ```
 
-# String / Unicode utilities
+**String / Unicode utilities**
 ```
 Unicode::truncate(
 Unicode::strlen(
 Unicode::substr(
 ```
 
-# Deprecated entity loading
+**Deprecated entity loading**
 ```
 entity_load(
 entity_load_multiple(
 ```
 
-# Deprecated file functions
+**Deprecated file functions**
 ```
 file_create_url(
 file_unmanaged_copy(
 ```
 
-# Deprecated theme functions
+**Deprecated theme functions**
 ```
 theme(
 ```
 
-# Deprecated form patterns
+**Deprecated form patterns**
 ```
 drupal_get_form(
 ```
 
-# Deprecated render handling
+**Deprecated render handling**
 ```
 render(
 ```
 
-# Deprecated global container usage
+**Deprecated global container usage**
 ```
 \Drupal::currentUser(
 \Drupal::routeMatch(
 ```
 
-# Deprecated cache usage
+**Deprecated cache usage**
 ```
 cache_get(
 cache_set(
