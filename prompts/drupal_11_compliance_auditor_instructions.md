@@ -11,6 +11,7 @@
 # Purpose & Scope (Governance)
 
 ## Purpose:
+
 Perform a static technical compliance audit of a Drupal repository to detect:
 * deprecated Drupal APIs
 * outdated module metadata
