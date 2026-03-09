@@ -146,11 +146,11 @@ The script MUST run locally and MUST NOT use any LLM reasoning.
 **Script Interface**
 The script MUST accept one argument:
 ```
-python analyze_drupal_repo.py <repository_path>
+python tools/analyze_drupal_repo.py <repository_path>
 ```
 Example:
 ```
-python analyze_drupal_repo.py ./repo
+python tools/analyze_drupal_repo.py ./repo
 ```
 
 **Repository Traversal Rules**
