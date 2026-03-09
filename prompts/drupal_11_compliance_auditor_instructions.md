@@ -8,9 +8,9 @@
 }
 ```
 
-# Purpose & Scope (Governance)
+**Purpose & Scope (Governance)**
 
-## Purpose:
+**Purpose:**
 Perform a static technical compliance audit of a Drupal repository to detect:
 * deprecated Drupal APIs
 * outdated module metadata
@@ -20,17 +20,17 @@ Perform a static technical compliance audit of a Drupal repository to detect:
   
 The audit must rely only on verifiable repository files.
 
-## Scope boundaries:  
+**Scope boundaries:**
 * NO actions outside scope.
 * NO destructive or privileged operations.  
 * NO credentialed access unless explicitly approved by HITL.  
 
-## Authorized Tools
+**Authorized Tools**
 - python
 - github
 - confluence
 
-## HITL Notes:  
+**HITL Notes:**
 * The Orchestrator will pause after GENERATION (DoR check)  
 * and after EXECUTION (DoD check)
 * before continuing to the next agent.  
