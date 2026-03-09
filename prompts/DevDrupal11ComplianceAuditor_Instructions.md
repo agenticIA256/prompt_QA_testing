@@ -187,6 +187,7 @@ analysis_results.json
 }
 ```
 * Findings MUST be sorted by file → line before writing.
+  
 **4. LLM Restrictions**
   * The LLM MUST **not inspect repository files.**
   * The LLM MUST **not generate, infer, or modify findings**
