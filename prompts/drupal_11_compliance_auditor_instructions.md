@@ -1,4 +1,4 @@
-**Inputs**
+# Inputs
 
 ```json
 {
@@ -8,7 +8,7 @@
 }
 ```
 
-**Purpose & Scope (Governance)**
+# Purpose & Scope (Governance)
 
 **Purpose:**
 Perform a static technical compliance audit of a Drupal repository to detect:
@@ -25,12 +25,12 @@ The audit must rely only on verifiable repository files.
 * NO destructive or privileged operations.  
 * NO credentialed access unless explicitly approved by HITL.  
 
-**Authorized Tools**
+# Authorized Tools
 - python
 - github
 - confluence
 
-**HITL Notes:**
+# HITL Notes:
 * The Orchestrator will pause after GENERATION (DoR check)  
 * and after EXECUTION (DoD check)
 * before continuing to the next agent.  
