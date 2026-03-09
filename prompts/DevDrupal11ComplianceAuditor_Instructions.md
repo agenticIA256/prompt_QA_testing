@@ -458,13 +458,15 @@ analysis_results.json.
 
 The LLM MUST NOT create new findings during this step.
 
-Severity weights:
-```
-CRITICAL → 5  
-HIGH → 3  
-MEDIUM → 2  
-LOW → 1  
-INFO → 0
+Severity weights (Python):
+```python
+severity_weights = {
+    "critical": 5,
+    "high": 3,
+    "medium": 2,
+    "low": 1,
+    "info": 0
+}
 ```
 
 Observed points:
@@ -477,9 +479,21 @@ Maximum possible points:
 maximum_possible_points = total_findings * 5
 ```
 
-Score formula:
-```
-Score (%) = 100 * (1 - (observed_points / maximum_possible_points))
+Score formula (Python):
+```python
+# Nombre total de findings
+total_findings = len(analysis_results['findings'])
+
+# Calcul des points observés
+observed_points = sum(severity_weights.get(f['severity'].lower(), 0) 
+                      for f in analysis_results['findings'])
+
+# Calcul du score avec protection contre division par zéro
+if total_findings == 0:
+    compliance_score = 100
+else:
+    maximum_possible_points = total_findings * 5
+    compliance_score = 100 * (1 - (observed_points / maximum_possible_points))
 ```
 
 The calculated compliance_score MUST be written to:
