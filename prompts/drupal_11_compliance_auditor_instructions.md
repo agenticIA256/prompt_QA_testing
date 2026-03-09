@@ -328,13 +328,59 @@ code snippet
 severity
 recommendation
 
+### 3.14 — Compliance Score Calculation
+
+Purpose: Provide a global technical compliance score post-migration, based on the results of sub-analyses 3.1 → 3.13.
+
+Method:
+
+Each sub-analysis (deprecated_api, dependency_injection, module_metadata, composer_dependencies, etc.) is assigned a weight:
+* CRITICAL → 5 points
+* HIGH → 3 points
+* MEDIUM → 2 points
+* LOW → 1 point
+* INFO → 0 points
+
+Compliance Score calculation:
+```
+Score (%) = 100 * (1 - (observed_points / maximum_possible_points))
+```
+* observed_points = sum of points of findings identified.
+* maximum_possible_points = sum of points if all files contained critical issues.
+  
+Output:
+* Add a field compliance_score in execution_log.json:
+```
+"compliance_score": {
+  "percentage": 87.5,
+  "critical_issues": 12,
+  "high_issues": 34,
+  "medium_issues": 21,
+  "low_issues": 7,
+  "info_issues": 15
+}
+```
+* Include a summary in drupal11_audit_report.md:
+```
+### Technical Compliance Score
+- Overall Score: 87.5 %
+- Breakdown by Severity:
+  - CRITICAL: 12
+  - HIGH: 34
+  - MEDIUM: 21
+  - LOW: 7
+  - INFO: 15
+```
+RAI / QASH Notes:
+* DoR (Definition of Ready): all sub-analyses must be completed before calculating the score.
+* DoD (Definition of Done): the score must be written to execution_log.json and included in the Markdown report.
+
 #### Consolidation: Generate Structured Results
-- This step aggregates results from sub-analyses 3.1 → 3.13.
-Python analysis scripts must generate:
-```
-analysis_results.json
-```
-Structure example:
+Purpose: Aggregate the results from sub-analyses 3.1 → 3.14 into a single structured JSON file (analysis_results.json) for deterministic reporting and compliance score calculation.
+
+Input: Results from all Python static analysis scripts.
+
+Output: analysis_results.json with the following structure:
 ```json
 {
   "deprecated_api": [],
@@ -349,14 +395,37 @@ Structure example:
   "php_compatibility": [],
   "config_issues": [],
   "translation_issues": [],
-  "test_issues": []
+  "test_issues": [],
+  "compliance_score": {
+    "percentage": 87.5,
+    "critical_issues": 12,
+    "high_issues": 34,
+    "medium_issues": 21,
+    "low_issues": 7,
+    "info_issues": 15
+  }
 }
 ```
 
-Rules for all sub-analyses:
-* Evidence requirement: file path, line number, code snippet
-* Severity classification: CRITICAL, HIGH, MEDIUM, LOW, INFO
-* Recommendations: Include explicit fix suggestions where possible
+Each sub-analysis should include:
+1. **Evidence**
+   - File path
+   - Line number
+   - Code snippet
+
+2. **Severity**
+   - CRITICAL
+   - HIGH
+   - MEDIUM
+   - LOW
+   - INFO
+
+3. **Recommendation**
+   - Explicit fix suggestions
+ 
+> **Note:**  
+> - Compliance score (`3.14`) is added to the JSON to centralize results.  
+> - `analysis_results.json` is read-only for the LLM when generating the final report.
   
 ## Step 4 — Report Generation
 Generate the human-readable audit report: drupal11_audit_report.md
