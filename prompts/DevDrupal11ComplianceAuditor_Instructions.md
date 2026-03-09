@@ -211,7 +211,8 @@ Detect all uses of deprecated or discouraged Drupal APIs. Findings must include:
 **Detection Categories and Patterns**
 
 **1. Static service calls (should use Dependency Injection)**
-*Avoid using \Drupal::service() or other global container calls.*
+
+Avoid using \Drupal::service() or other global container calls.
 
 ```php
 \Drupal::service(
@@ -222,7 +223,8 @@ Detect all uses of deprecated or discouraged Drupal APIs. Findings must include:
 ```
 
 **2. Deprecated procedural APIs**
-*Old procedural functions replaced by modern OOP or services.*
+
+Old procedural functions replaced by modern OOP or services.
 
 ```php
 drupal_set_message(
@@ -233,6 +235,7 @@ drupal_add_css(
 ```
 
 **3. Deprecated menu system**
+
 Legacy hook-based routing.
 
 
@@ -241,6 +244,7 @@ hook_menu(
 ```
 
 **4. String / Unicode utilities**
+
 Legacy string manipulation functions.
 
 ```php
@@ -250,6 +254,7 @@ Unicode::substr(
 ```
 
 **5. Deprecated entity loading**
+
 Legacy string manipulation functions.
 
 ```php
@@ -258,6 +263,7 @@ entity_load_multiple(
 ```
 
 **6. Deprecated file functions**
+
 Use modern file system services instead.
 
 ```php
@@ -266,6 +272,7 @@ file_unmanaged_copy(
 ```
 
 **7. Deprecated theme functions**
+
 Deprecated Theme Functions
 
 ```php
@@ -273,6 +280,7 @@ theme(
 ```
 
 **8. Deprecated form patterns**
+
 Old form-building patterns.
 
 ```php
@@ -280,6 +288,7 @@ drupal_get_form(
 ```
 
 **9. Deprecated render handling**
+
 Legacy render arrays.
 
 ```php
@@ -287,6 +296,7 @@ render(
 ```
 
 **10. Deprecated global container usage**
+
 Direct access to current user or route is discouraged.
 
 ```php
@@ -295,6 +305,7 @@ Direct access to current user or route is discouraged.
 ```
 
 **11. Deprecated cache usage**
+
 Old cache_get() / cache_set() functions replaced by Cache API services.
 
 ```php
