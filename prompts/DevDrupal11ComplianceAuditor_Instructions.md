@@ -142,6 +142,7 @@ This script performs all static analyses (3.1 → 3.13) on the Drupal repository
     vendor/, node_modules/, .git/, core/
     ```
   * No randomness; no external API calls; no LLM reasoning.
+    
 **2. Analysis Modules (3.1 → 3.13)**
 Each analysis appends findings to a shared list:
   * run_analysis_3_1() — Deprecated API Detection
