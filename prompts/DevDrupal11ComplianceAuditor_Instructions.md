@@ -199,13 +199,21 @@ analysis_results.json
   * All reporting, grouping, or summaries in Markdown MUST strictly reflect analysis_results.json.
 
 ### 3.1 Deprecated API Detection
+**Objective:**
+Detect all uses of deprecated or discouraged Drupal APIs. Findings must include:
+* file path
+* line number
+* code_snippet
+* severity
+* recommendation
 
-Search for deprecated or discouraged Drupal API usage.
 
-Search patterns such as:
+**Detection Categories and Patterns**
 
-**Static service calls (should use Dependency Injection)**
-```
+**1. Static service calls (should use Dependency Injection)**
+Avoid using \Drupal::service() or other global container calls.
+
+```php
 \Drupal::service(
 \Drupal::entityTypeManager(
 \Drupal::database(
@@ -213,8 +221,10 @@ Search patterns such as:
 \Drupal::request(
 ```
 
-**Deprecated procedural APIs**
-```
+**2. Deprecated procedural APIs**
+Old procedural functions replaced by modern OOP or services.
+
+```php
 drupal_set_message(
 drupal_get_path(
 drupal_render(
@@ -222,53 +232,72 @@ drupal_add_js(
 drupal_add_css(
 ```
 
-**Deprecated menu system**
-```
+**3. Deprecated menu system**
+Legacy hook-based routing.
+
+
+```php
 hook_menu(
 ```
 
-**String / Unicode utilities**
-```
+**4. String / Unicode utilities**
+Legacy string manipulation functions.
+
+```php
 Unicode::truncate(
 Unicode::strlen(
 Unicode::substr(
 ```
 
-**Deprecated entity loading**
-```
+**5. Deprecated entity loading**
+Legacy string manipulation functions.
+
+```php
 entity_load(
 entity_load_multiple(
 ```
 
-**Deprecated file functions**
-```
+**6. Deprecated file functions**
+Use modern file system services instead.
+
+```php
 file_create_url(
 file_unmanaged_copy(
 ```
 
-**Deprecated theme functions**
-```
+**7. Deprecated theme functions**
+Deprecated Theme Functions
+
+```php
 theme(
 ```
 
-**Deprecated form patterns**
-```
+**8. Deprecated form patterns**
+Old form-building patterns.
+
+```php
 drupal_get_form(
 ```
 
-**Deprecated render handling**
-```
+**9. Deprecated render handling**
+Legacy render arrays.
+
+```php
 render(
 ```
 
-**Deprecated global container usage**
-```
+**10. Deprecated global container usage**
+Direct access to current user or route is discouraged.
+
+```php
 \Drupal::currentUser(
 \Drupal::routeMatch(
 ```
 
-**Deprecated cache usage**
-```
+**11. Deprecated cache usage**
+Old cache_get() / cache_set() functions replaced by Cache API services.
+
+```php
 cache_get(
 cache_set(
 ```
