@@ -437,19 +437,44 @@ severity
 recommendation
 
 ## Step 4 — Compliance Score Calculation
-* Calculate global technical compliance score based on 3.1 → 3.13
-* Weighting per severity:
-  * CRITICAL → 5
-  * HIGH → 3
-  * MEDIUM → 2
-  * LOW → 1
-  * INFO → 0
-* Formula:
+
+The global technical compliance score MUST be calculated strictly from
+```
+analysis_results.json.
+```
+
+The LLM MUST NOT create new findings during this step.
+
+Severity weights:
+```
+CRITICAL → 5  
+HIGH → 3  
+MEDIUM → 2  
+LOW → 1  
+INFO → 0
+```
+
+Observed points:
+```
+observed_points = sum(severity_weight for each finding)
+```
+
+Maximum possible points:
+```
+maximum_possible_points = total_findings * 5
+```
+
+Score formula:
 ```
 Score (%) = 100 * (1 - (observed_points / maximum_possible_points))
 ```
-* Add compliance_score field in execution_log.json
-* Include summary in Markdown report
+
+The calculated compliance_score MUST be written to:
+```
+execution_log.json
+```
+
+The LLM may only read this value and include a summary in the Markdown report.
 
 ## Step 5 – HITL
 * Create hitl_status.json:
