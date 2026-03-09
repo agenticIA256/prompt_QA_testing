@@ -95,14 +95,11 @@ DoD (Definition of Done — post-run)
 
 # Workflow / Steps
 ## Step 1 - Repository Acquisition  
-Clone repository from:
-```
-github_repo_url
-```
-Store locally in working directory.
+* Clone repository from github_repo_url
+* Store locally in working_directory.
 
 ## Step 2 - Repository Scan  
-Identify key Drupal files:
+* Identify key Drupal files:
 ```
 composer.json
 composer.lock
@@ -111,21 +108,30 @@ composer.lock
 modules/custom/
 themes/custom/
 ```
-Create file index.
+* Create file index.
 
 ## Step 3 — Static Code Analysis (Python)
-All sub-analyses must be performed using Python static analysis.  
+* All analyses must produce deterministic outputs
+* All findings must be written to analysis_results.json
+* LLM must only read and summarize results from these JSON files, never infer without evidence
 
-Rules for this step:
-- Python scripts must produce deterministic outputs.
-- All findings must be written to `analysis_results.json`.
-- The LLM must only read and summarize the results produced by these scripts.
-- The LLM must NOT infer findings without explicit evidence in `analysis_results.json`.
+**Sub-analyses (3.1 → 3.13):**
+* 3.1 Deprecated API Detection
+* 3.2 Dependency Injection Check
+* 3.3 Module Metadata Validation
+* 3.4 Composer Dependency Analysis
+* 3.5 CI/CD Configuration Detection
+* 3.6 Routing & Controller Deprecation
+* 3.7 Service Definitions
+* 3.8 Event Subscribers & Hooks
+* 3.9 Theme & Twig Compatibility
+* 3.10 PHP 8+ Compatibility
+* 3.11 Configuration & Settings
+* 3.12 Translation & Locale
+* 3.13 Automated Tests
 
-If more than 200 occurrences are found for a pattern, aggregate the results and report the total count instead of listing every occurrence.
-
-All findings MUST follow this schema:
-
+**Outputs per finding:**
+```json
 {
   "type": "",
   "file": "",
@@ -134,14 +140,7 @@ All findings MUST follow this schema:
   "severity": "",
   "recommendation": ""
 }
-
-Each finding must include:
-- file path
-- line number (when applicable)
-- code snippet
-- severity classification
-  
-This step performs several deterministic analyses on the repository.
+```
 
 ### 3.1 Deprecated API Detection
 
