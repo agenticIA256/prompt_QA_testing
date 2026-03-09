@@ -208,7 +208,8 @@ Structure:
 Each finding MUST follow:
 ```json
 {
- "type": "",
+  "analysis": "3.1",
+  "type": "",
   "file": "",
   "line": 0,
   "code_snippet": "",
@@ -322,9 +323,13 @@ code snippet
 severity
 recommendation
 ```
-Recommendation example:
-Replace static service calls with Dependency Injection
-using the Drupal service container.
+Recommendations MUST be derived strictly from findings present in
+analysis_results.json.
+
+The LLM MUST NOT create new findings, modify severities,
+or infer additional issues.
+
+Only summarization and grouping of existing findings is allowed.
 
 ### 3.3 Module Metadata Validation
 Parse all .info.yml files.
