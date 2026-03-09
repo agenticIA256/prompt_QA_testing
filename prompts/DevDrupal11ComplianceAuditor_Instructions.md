@@ -131,6 +131,7 @@ analyze_drupal_repo.py
 This script performs all static analyses (3.1 → 3.13) on the Drupal repository.
 
 **Requirements & Restrictions:**
+
 **1. Deterministic analysis only**
   * The script MUST traverse the repository recursively.
   * Only scan files with extensions:
@@ -144,6 +145,7 @@ This script performs all static analyses (3.1 → 3.13) on the Drupal repository
   * No randomness; no external API calls; no LLM reasoning.
     
 **2. Analysis Modules (3.1 → 3.13)**
+
 Each analysis appends findings to a shared list:
   * run_analysis_3_1() — Deprecated API Detection
   * run_analysis_3_2() — Dependency Injection Check
@@ -158,6 +160,7 @@ Each analysis appends findings to a shared list:
   * run_analysis_3_11() — Configuration & Settings
   * run_analysis_3_12() — Translation & Locale
   * run_analysis_3_13() — Automated Tests
+    
 **3. Output Format**
 * Generate a single deterministic file:
 ```
