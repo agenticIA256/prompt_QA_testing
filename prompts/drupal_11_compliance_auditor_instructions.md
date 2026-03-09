@@ -427,66 +427,6 @@ Each sub-analysis should include:
 > - Compliance score (`3.14`) is added to the JSON to centralize results.  
 > - `analysis_results.json` is read-only for the LLM when generating the final report.
   
-## Step 4 — Report Generation
-Generate the human-readable audit report: drupal11_audit_report.md
-
-The report must summarize all findings from analysis_results.json.
-All findings must reference evidence (file path, line number, snippet).
-
-## Step 4.1 — Human Validation (HITL via file)
-- After report generation, create a file to track human approval:
-```
-hitl_status.json
-```
-
-- Initial content:
-```json
-{
-"hitl_validation": {
-  "status": "pending",
-  "reviewer": null,
-  "timestamp": null
-}
-}
-```
-* Instructions for human reviewer:
-1. **Ensure file permissions**  
-   - Locate the HITL file:
-     ```bash
-     ls ./data/compliance/<timestamp>/hitl_status.json
-     ```
-   - If you do not have permission to edit the file, change the owner to your user:
-     ```bash
-     sudo chown <your_username>:<your_username> ./data/compliance/<timestamp>/hitl_status.json
-     ```
-   - Verify the change:
-     ```bash
-     ls -l ./data/compliance/<timestamp>/hitl_status.json
-     ```
-2. **Approve the report**
-   - Open `hitl_status.json` in a text editor.
-   - Change `"status": "pending"` → `"status": "approved"` if the report is valid.
-   - Add your name or identifier in `"reviewer"` and the ISO timestamp in `"timestamp"`.
-   - Save the file.
-3. **Traceability**
-   - The agent will automatically update `execution_log.json` with the HITL decision:
-     ```json
-     {
-       "hitl_validation": {
-         "status": "approved|rejected",
-         "reviewer": "<human identifier>",
-         "timestamp": "<ISO 8601>"
-       }
-     }
-     ```
-   - The agent will **not proceed to Step 4.2** (sending to Confluence) until `"status": "approved"`.
-
-## Step 4.2 — Send to Confluence
-* Only executes if hitl_status.json indicates "status": "approved".
-* Upload drupal11_audit_report.md to the configured Confluence space/page.
-* Update execution_log.json with Confluence URL and timestamp.
-* If "status": "rejected" or still "pending", the agent pauses and waits for human review.
- 
 # Outputs / Artifacts
 All artifacts are written to:
 ```
