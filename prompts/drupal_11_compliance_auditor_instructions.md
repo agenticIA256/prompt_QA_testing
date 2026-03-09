@@ -115,24 +115,86 @@ Create file index.
 
 ## Step 3 — Static Code Analysis (Python)
 All sub-analyses must be performed using Python static analysis.  
-The LLM must only summarize results returned by the analysis scripts.
 
+Rules for this step:
+- Python scripts must produce deterministic outputs.
+- All findings must be written to `analysis_results.json`.
+- The LLM must only read and summarize the results produced by these scripts.
+- The LLM must NOT infer findings without explicit evidence in `analysis_results.json`.
+
+If more than 200 occurrences are found for a pattern, aggregate the results and report the total count instead of listing every occurrence.
+
+All findings MUST follow this schema:
+
+{
+  "type": "",
+  "file": "",
+  "line": "",
+  "code_snippet": "",
+  "severity": "",
+  "recommendation": ""
+}
+
+Each finding must include:
+- file path
+- line number (when applicable)
+- code snippet
+- severity classification
+  
 This step performs several deterministic analyses on the repository.
 
 ### 3.1 Deprecated API Detection
+
+Search for deprecated or discouraged Drupal API usage.
+
 Search patterns such as:
-```
-Unicode::
+
+# Static service calls (should use Dependency Injection)
 \Drupal::service(
 \Drupal::entityTypeManager(
-```
+\Drupal::database(
+\Drupal::config(
+\Drupal::request(
 
-For each occurrence return:
-```
-file
-line
-code snippet
-```
+# Deprecated procedural APIs
+drupal_set_message(
+drupal_get_path(
+drupal_render(
+drupal_add_js(
+drupal_add_css(
+
+# Deprecated menu system
+hook_menu(
+
+# String / Unicode utilities
+Unicode::truncate(
+Unicode::strlen(
+Unicode::substr(
+
+# Deprecated entity loading
+entity_load(
+entity_load_multiple(
+
+# Deprecated file functions
+file_create_url(
+file_unmanaged_copy(
+
+# Deprecated theme functions
+theme(
+
+# Deprecated form patterns
+drupal_get_form(
+
+# Deprecated render handling
+render(
+
+# Deprecated global container usage
+\Drupal::currentUser(
+\Drupal::routeMatch(
+
+# Deprecated cache usage
+cache_get(
+cache_set(
 
 ### 3.2 Dependency Injection Check
 Identify static service calls that should use Dependency Injection.
@@ -140,14 +202,21 @@ Patterns to search for:
 ```
 \Drupal::service(
 \Drupal::entityTypeManager(
+\Drupal::database(
+\Drupal::config(
+\Drupal::currentUser(
 ```
 For each occurrence, return:
 ```
 file
 line
 code snippet
+severity
 recommendation
 ```
+Recommendation example:
+Replace static service calls with Dependency Injection
+using the Drupal service container.
 
 ### 3.3 Module Metadata Validation
 Parse all .info.yml files.
@@ -232,11 +301,32 @@ Verify proper use of:
 * Deprecated locale handling functions
 
 ### 3.13 Automated Tests
-Check that any PHPUnit, Kernel, or functional tests:
-* Run successfully on Drupal 11
-* Use compatible dependencies
-* Do not rely on deprecated APIs
-  
+Detect test files in the repository, including:
+- tests/src/Kernel/*
+- tests/src/Functional/*
+- tests/src/FunctionalJavascript/*
+- tests/src/Unit/*
+
+For each test file:
+
+Verify:
+- Use of supported PHPUnit base classes
+- Compatibility with Drupal 11 testing framework
+- Absence of deprecated Drupal APIs
+
+Detect patterns such as:
+- Deprecated test base classes
+- Legacy PHPUnit annotations
+- Static service calls (\Drupal::service)
+
+For each finding return:
+
+type
+file
+line
+code snippet
+severity
+recommendation
 
 #### Consolidation: Generate Structured Results
 - This step aggregates results from sub-analyses 3.1 → 3.13.
