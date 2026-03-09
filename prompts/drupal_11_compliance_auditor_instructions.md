@@ -405,5 +405,7 @@ All artifacts in ./data/compliance/<timestamp>/:
 * hitl_status.json – HITL validation status
 
 # Return
-The agent returns the absolute path of the run directory:
+* Absolute path of run directory:
+```
 ./data/compliance/<timestamp>/
+```
