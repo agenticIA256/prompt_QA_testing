@@ -479,12 +479,7 @@ observed_points = sum(severity_weights.get(f['severity'].lower(), 0)
                       for f in analysis_results['findings'])
 ```
 
-### Step 4.3 — Maximum possible points
-```python
-maximum_possible_points = total_findings * 5
-```
-
-### Step 4.4 — Compliance score calculation
+### Step 4.3 — Compliance score calculation
 ```python
 # Protection contre division par zéro
 if total_findings == 0:
