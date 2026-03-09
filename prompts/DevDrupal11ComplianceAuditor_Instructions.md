@@ -211,7 +211,7 @@ Detect all uses of deprecated or discouraged Drupal APIs. Findings must include:
 **Detection Categories and Patterns**
 
 **1. Static service calls (should use Dependency Injection)**
-Avoid using \Drupal::service() or other global container calls.
+*Avoid using \Drupal::service() or other global container calls.*
 
 ```php
 \Drupal::service(
@@ -222,7 +222,7 @@ Avoid using \Drupal::service() or other global container calls.
 ```
 
 **2. Deprecated procedural APIs**
-Old procedural functions replaced by modern OOP or services.
+*Old procedural functions replaced by modern OOP or services.*
 
 ```php
 drupal_set_message(
