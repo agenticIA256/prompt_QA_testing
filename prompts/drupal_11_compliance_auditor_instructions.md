@@ -349,75 +349,22 @@ code snippet
 severity
 recommendation
 
-### 3.14 — Compliance Score Calculation
-
-**Purpose:** Provide a global technical compliance score post-migration, based on the results of sub-analyses 3.1 → 3.13.
-
-**Method:**
-
-Each sub-analysis (deprecated_api, dependency_injection, module_metadata, composer_dependencies, etc.) is assigned a weight:
-* CRITICAL → 5 points
-* HIGH → 3 points
-* MEDIUM → 2 points
-* LOW → 1 point
-* INFO → 0 points
-
-Compliance Score calculation:
+## Step 4 — Compliance Score Calculation
+* Calculate global technical compliance score based on 3.1 → 3.13
+* Weighting per severity:
+  * CRITICAL → 5
+  * HIGH → 3
+  * MEDIUM → 2
+  * LOW → 1
+  * INFO → 0
+* Formula:
 ```
 Score (%) = 100 * (1 - (observed_points / maximum_possible_points))
 ```
-* observed_points = sum of points of findings identified.
-* maximum_possible_points = sum of points if all files contained critical issues.
-  
-Output:
-* Add a field compliance_score in execution_log.json:
-```
-"compliance_score": {
-  "percentage": 87.5,
-  "critical_issues": 12,
-  "high_issues": 34,
-  "medium_issues": 21,
-  "low_issues": 7,
-  "info_issues": 15
-}
-```
-* Include a summary in drupal11_audit_report.md:
-```
-### Technical Compliance Score
-- Overall Score: 87.5 %
-- Breakdown by Severity:
-  - CRITICAL: 12
-  - HIGH: 34
-  - MEDIUM: 21
-  - LOW: 7
-  - INFO: 15
-```
-RAI / QASH Notes:
-* DoR (Definition of Ready): all sub-analyses must be completed before calculating the score.
-* DoD (Definition of Done): the score must be written to execution_log.json and included in the Markdown report.
+* Add compliance_score field in execution_log.json
+* Include summary in Markdown report
 
-### 3.15 Consolidation: Generate Structured Results
-**Purpose:** Aggregate results from sub-analyses and prepare all artifacts.
-
-**Steps:**
-1. Aggregate findings from 3.1 → 3.13 into analysis_results.json
-2. Include compliance_score
-3. Generate human-readable bundle drupal11_audit_report.md including:
-   * Executive summary and compliance score
-   * Findings and recommendations per sub-analysis
-   * DoR/HITL checklist
-   * Task Execution Report (files processed, errors/refusals, paths)
-4. Ensure analysis_results.json serves as input for the next agent
-5. Pause for HITL approval if required
-
-**Outputs:**
-* analysis_results.json (structured JSON for machine processing)
-* drupal11_audit_report.md (Markdown bundle with Task Execution Report)
-* execution_log.json (RAI-compliant execution metadata)
-Output: analysis_results.json with the following structure:
-
-## Step 4 – Report Generation & HITL
-* After Step 3.15, write human-readable report
+## Step 5 – HITL
 * Create hitl_status.json:
 ```json
 {
@@ -431,41 +378,31 @@ Output: analysis_results.json with the following structure:
 * Instructions: human reviewer must approve/reject
 * Agent pauses until HITL approval
 
-### 4.2 - Send to Confluence
+### 5.2 - Send to Confluence
 * Only execute if HITL status = approved
 * Upload drupal11_audit_report.md to Confluence
 * Update execution_log.json with Confluence URL and timestamp
 
 # Outputs / Artifacts
 All artifacts in ./data/compliance/<timestamp>/:
-* analysis_results.json – structured results
-* drupal11_audit_report.md – bundle Markdown with Task Execution Report
-* execution_log.json – RAI execution metadata
+* analysis_results.json – structured JSON produced by Python static analysis scripts
+  * Serves as input for the next agent
+  * Never modified by LLM, only read for report generation
+* drupal11_audit_report.md – human-readable bundle with:
+  * Executive summary
+  * Compliance score
+  * Findings & recommendations
+  * DoR / HITL checklist
+  * Task Execution Report
+* execution_log.json – RAI-compliant metadata including:
+  * run_id
+  * steps performed
+  * tools_called
+  * errors / fallback status
+  * SCI metrics (llm_calls, duration_ms)
+  * outputs (paths to all written files)
+  * compliance_score
 * hitl_status.json – HITL validation status
-
-## analysis_results.json
-
-Structured output produced by Python static analysis scripts.
-
-The LLM must not generate or modify this file.
-It can only read and summarize its content when generating the audit report.
-
-Example:
-```json
-{
-  "deprecated_api": [
-    {
-      "file": "tremblant_core.module",
-      "line": 143,
-      "pattern": "Unicode::truncate",
-      "snippet": "Unicode::truncate($text, 160)"
-    }
-  ],
-  "module_metadata": [],
-  "composer_dependencies": [],
-  "cicd": []
-}
-```
 
 # Return
 The agent returns the absolute path of the run directory:
