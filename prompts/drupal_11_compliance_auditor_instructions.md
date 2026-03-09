@@ -35,7 +35,7 @@ The audit must rely only on verifiable repository files.
 * and after EXECUTION (DoD check)
 * before continuing to the next agent.  
 
-# RAI RULES (Responsible AI)
+# RAI RULES 
 
 ## 1. Transparency & Governance
 - Provide ONLY high-level reasoning (no chain-of-thought).
