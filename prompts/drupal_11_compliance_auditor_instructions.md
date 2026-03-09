@@ -396,75 +396,52 @@ RAI / QASH Notes:
 * DoR (Definition of Ready): all sub-analyses must be completed before calculating the score.
 * DoD (Definition of Done): the score must be written to execution_log.json and included in the Markdown report.
 
-#### Consolidation: Generate Structured Results
-Purpose: Aggregate the results from sub-analyses 3.1 → 3.14 into a single structured JSON file (analysis_results.json) for deterministic reporting and compliance score calculation.
+### 3.15 Consolidation: Generate Structured Results
+**Purpose:** Aggregate results from sub-analyses and prepare all artifacts.
 
-Input: Results from all Python static analysis scripts.
+**Steps:**
+1. Aggregate findings from 3.1 → 3.13 into analysis_results.json
+2. Include compliance_score
+3. Generate human-readable bundle drupal11_audit_report.md including:
+   * Executive summary and compliance score
+   * Findings and recommendations per sub-analysis
+   * DoR/HITL checklist
+   * Task Execution Report (files processed, errors/refusals, paths)
+4. Ensure analysis_results.json serves as input for the next agent
+5. Pause for HITL approval if required
 
+**Outputs:**
+* analysis_results.json (structured JSON for machine processing)
+* drupal11_audit_report.md (Markdown bundle with Task Execution Report)
+* execution_log.json (RAI-compliant execution metadata)
 Output: analysis_results.json with the following structure:
+
+## Step 4 – Report Generation & HITL
+* After Step 3.15, write human-readable report
+* Create hitl_status.json:
 ```json
 {
-  "deprecated_api": [],
-  "dependency_injection": [],
-  "module_metadata": [],
-  "composer_dependencies": [],
-  "cicd": [],
-  "routing_deprecations": [],
-  "service_definitions": [],
-  "event_subscribers": [],
-  "twig_issues": [],
-  "php_compatibility": [],
-  "config_issues": [],
-  "translation_issues": [],
-  "test_issues": [],
-  "compliance_score": {
-    "percentage": 87.5,
-    "critical_issues": 12,
-    "high_issues": 34,
-    "medium_issues": 21,
-    "low_issues": 7,
-    "info_issues": 15
+  "hitl_validation": {
+    "status": "pending",
+    "reviewer": null,
+    "timestamp": null
   }
 }
 ```
+* Instructions: human reviewer must approve/reject
+* Agent pauses until HITL approval
 
-Each sub-analysis should include:
-1. **Evidence**
-   - File path
-   - Line number
-   - Code snippet
+### 4.2 - Send to Confluence
+* Only execute if HITL status = approved
+* Upload drupal11_audit_report.md to Confluence
+* Update execution_log.json with Confluence URL and timestamp
 
-2. **Severity**
-   - CRITICAL
-   - HIGH
-   - MEDIUM
-   - LOW
-   - INFO
-
-3. **Recommendation**
-   - Explicit fix suggestions
- 
-> **Note:**  
-> - Compliance score (`3.14`) is added to the JSON to centralize results.  
-> - `analysis_results.json` is read-only for the LLM when generating the final report.
-  
 # Outputs / Artifacts
-All artifacts are written to:
-```
-./data/compliance/<timestamp>/
-```
-
-Generated files:
-```
-drupal11_audit_report.md
-    Human-readable audit report.
-
-analysis_results.json
-    Raw structured results produced by Python static analysis.
-
-execution_log.json
-    Execution metadata and audit trace of the analysis workflow.
-```
+All artifacts in ./data/compliance/<timestamp>/:
+* analysis_results.json – structured results
+* drupal11_audit_report.md – bundle Markdown with Task Execution Report
+* execution_log.json – RAI execution metadata
+* hitl_status.json – HITL validation status
 
 ## analysis_results.json
 
