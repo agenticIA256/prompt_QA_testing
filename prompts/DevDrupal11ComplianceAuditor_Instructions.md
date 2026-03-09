@@ -111,11 +111,58 @@ themes/custom/
 * Create file index.
 
 ## Step 3 — Static Code Analysis (Python)
-* All analyses must produce deterministic outputs
-* All findings must be written to analysis_results.json
-* LLM must only read and summarize results from these JSON files, never infer without evidence
+The agent MUST generate and execute a Python script named: 
+```
+analyze_drupal_repo.py
+```
+This script performs all static analyses (3.1 → 3.13) on the Drupal repository.
+The script MUST:
+  1. Traverse the repository recursively.
+  2. Detect patterns using regex or structured parsing
+  3. Produce deterministic findings
+  4. Write all results to analysis_results.json
+The script MUST run locally and MUST NOT use any LLM reasoning.
 
-**Sub-analyses (3.1 → 3.13):**
+**Script Interface**
+The script MUST accept one argument:
+```
+python analyze_drupal_repo.py <repository_path>
+```
+Example:
+```
+python analyze_drupal_repo.py ./repo
+```
+
+**Repository Traversal Rules**
+The script MUST scan the following file types:
+```
+.php
+.module
+.install
+.theme
+.inc
+.yml
+.yaml
+.json
+.twig
+```
+The script MUST ignore:
+```
+vendor/
+node_modules/
+.git/
+```
+
+**Sub-analyses (3.1 → 3.13)**
+The script MUST implement one function per analysis:
+```
+run_analysis_3_1()
+run_analysis_3_2()
+...
+run_analysis_3_13()
+```
+
+Analyses:
 * 3.1 Deprecated API Detection
 * 3.2 Dependency Injection Check
 * 3.3 Module Metadata Validation
@@ -129,18 +176,46 @@ themes/custom/
 * 3.11 Configuration & Settings
 * 3.12 Translation & Locale
 * 3.13 Automated Tests
+Each analysis appends findings to a shared list.
 
-**Outputs per finding:**
+**Output Format**
+The script MUST generate:
+```
+analysis_results.json
+```
+
+Structure:
 ```json
 {
-  "type": "",
+  "repository": "",
+  "scan_date": "",
+  "findings": []
+}
+```
+
+Each finding MUST follow:
+```json
+{
+ "type": "",
   "file": "",
-  "line": "",
+  "line": 0,
   "code_snippet": "",
-  "severity": "",
+  "severity": "low | medium | high | critical",
   "recommendation": ""
 }
 ```
+
+**Deterministic Constraints**
+The script MUST:
+* never use randomness
+* never call external APIs
+* never use LLM reasoning
+* only rely on static code inspection
+Findings MUST be sorted by:
+```
+file → line
+```
+before writing analysis_results.json.
 
 ### 3.1 Deprecated API Detection
 
@@ -384,25 +459,44 @@ Score (%) = 100 * (1 - (observed_points / maximum_possible_points))
 * Update execution_log.json with Confluence URL and timestamp
 
 # Outputs / Artifacts
-All artifacts in ./data/compliance/<timestamp>/:
-* analysis_results.json – structured JSON produced by Python static analysis scripts
-  * Serves as input for the next agent
-  * Never modified by LLM, only read for report generation
-* drupal11_audit_report.md – human-readable bundle with:
-  * Executive summary
-  * Compliance score
-  * Findings & recommendations
-  * DoR / HITL checklist
-  * Task Execution Report
-* execution_log.json – RAI-compliant metadata including:
-  * run_id
-  * steps performed
-  * tools_called
-  * errors / fallback status
-  * SCI metrics (llm_calls, duration_ms)
-  * outputs (paths to all written files)
-  * compliance_score
-* hitl_status.json – HITL validation status
+All artifacts are written to:
+```
+./data/compliance/<timestamp>/
+```
+
+Artifacts: 
+* analysis_results.json
+ – Structured JSON produced by Python static analysis scripts
+  - Contains all deterministic findings  
+  - Serves as input for the next agent t
+  - Must never be modified by the LLM
+  
+* drupal11_audit_report.md
+  – Human-readable report containing:
+    - Executive summary
+    - Compliance score
+    - Findings & recommendations
+    - DoR / HITL checklist
+    - Task Execution Report
+      
+* execution_log.json
+ – RAI-compliant execution metadata including:
+  - run_id
+  - steps performed
+  - tools_called
+  - errors / fallback status
+  - SCI metrics (llm_calls, duration_ms)
+  - outputs (paths to all written files)
+  - compliance_score
+    
+* hitl_status.json
+  - Human-in-the-loop validation status
+
+# Tooling
+The Python static analysis script MUST be generated as:
+```
+tools/analyze_drupal_repo.py
+```
 
 # Return
 * Absolute path of run directory:
