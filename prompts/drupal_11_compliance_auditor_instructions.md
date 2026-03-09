@@ -150,51 +150,73 @@ Search for deprecated or discouraged Drupal API usage.
 Search patterns such as:
 
 # Static service calls (should use Dependency Injection)
+```
 \Drupal::service(
 \Drupal::entityTypeManager(
 \Drupal::database(
 \Drupal::config(
 \Drupal::request(
+```
 
 # Deprecated procedural APIs
+```
 drupal_set_message(
 drupal_get_path(
 drupal_render(
 drupal_add_js(
 drupal_add_css(
+```
 
 # Deprecated menu system
+```
 hook_menu(
+```
 
 # String / Unicode utilities
+```
 Unicode::truncate(
 Unicode::strlen(
 Unicode::substr(
+```
 
 # Deprecated entity loading
+```
 entity_load(
 entity_load_multiple(
+```
 
 # Deprecated file functions
+```
 file_create_url(
 file_unmanaged_copy(
+```
 
 # Deprecated theme functions
+```
 theme(
+```
 
 # Deprecated form patterns
+```
 drupal_get_form(
+```
 
 # Deprecated render handling
+```
 render(
+```
 
 # Deprecated global container usage
+```
 \Drupal::currentUser(
 \Drupal::routeMatch(
+```
 
 # Deprecated cache usage
+```
 cache_get(
 cache_set(
+```
 
 ### 3.2 Dependency Injection Check
 Identify static service calls that should use Dependency Injection.
