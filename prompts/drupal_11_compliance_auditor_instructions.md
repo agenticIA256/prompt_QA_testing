@@ -352,9 +352,9 @@ recommendation
 
 ### 3.14 — Compliance Score Calculation
 
-Purpose: Provide a global technical compliance score post-migration, based on the results of sub-analyses 3.1 → 3.13.
+**Purpose:** Provide a global technical compliance score post-migration, based on the results of sub-analyses 3.1 → 3.13.
 
-Method:
+**Method:**
 
 Each sub-analysis (deprecated_api, dependency_injection, module_metadata, composer_dependencies, etc.) is assigned a weight:
 * CRITICAL → 5 points
