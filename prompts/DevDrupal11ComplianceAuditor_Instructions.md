@@ -99,7 +99,7 @@ DoD (Definition of Done — post-run)
 * Store locally in working_directory.
 
 ## Step 2 - Repository Scan  
-* Identify key Drupal files:
+The repository structure must be indexed to identify key Drupal files:
 ```
 composer.json
 composer.lock
@@ -108,7 +108,19 @@ composer.lock
 modules/custom/
 themes/custom/
 ```
-* Create file index.
+A file index must be created.
+
+IMPORTANT:
+
+The repository may only be analyzed by the Python static analysis script.
+
+The LLM MUST NOT scan repository files directly.
+
+The LLM is restricted to reading the following artifacts only:
+```
+analysis_results.json
+execution_log.json
+```
 
 ## Step 3 — Static Code Analysis (Python)
 The agent MUST generate and execute a Python script named: 
