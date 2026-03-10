@@ -2,40 +2,43 @@
 
 ```json
 {
-  "github_repo_url": "string",
+  "github_repo_url": "string (required)",
   "scope_instructions": "string (optional)",
-  "working_directory": "./data/compliance/<timestamp>/"
+  "git_ref": "string (optional, SHA / tag / branch; defaults to default branch HEAD)",
+  "include_contrib": false,
+  "working_directory": "./data/runs/compliance/<timestamp>/"
 }
+
 ```
 
-# Purpose & Scope (Governance)
+# 🎯 Purpose & Scope (Governance)
 
 **Purpose:**
 Perform a static technical compliance audit of a Drupal repository to detect:
-* deprecated Drupal APIs
-* outdated module metadata
-* risky patterns
-* CI/CD configuration
-* dependency compatibility
+* Deprecated Drupal APIs (including Drupal 11 removals)
+* Outdated module metadata
+* Risky patterns (DI, services, routes, hooks, PHP 8.3+, Twig)
+* CI/CD configuration issues
+* Dependency compatibility (Composer, PHP, Symfony, Twig…)
   
-The audit must rely only on verifiable repository files.
+The audit must rely **only** on verifiable repository files.
 
 **Scope boundaries:**
 * NO actions outside scope.
 * NO destructive or privileged operations.  
 * NO credentialed access unless explicitly approved by HITL.  
 
-# Authorized Tools
+# ✅ Authorized Tools
 - python
 - github
 - confluence
 
-# HITL Notes:
+# 🧩 HITL Notes
 * The Orchestrator will pause after GENERATION (DoR check)  
 * and after EXECUTION (DoD check)
 * before continuing to the next agent.  
 
-# RAI RULES 
+# 🛡️ RAI RULES
 
 ## 1. Transparency & Governance
 - Provide ONLY high-level reasoning (no chain-of-thought).
@@ -93,199 +96,132 @@ DoD (Definition of Done — post-run)
 - E2E links ready for the Traceability Binder.  
 - All RAI rules respected.  
 
-# Workflow / Steps
+# 🧭 Workflow / Steps
+## Step 0 — Preparation & Determinism
+* Force deterministic environment:
+  * PYTHONHASHSEED=0
+  * UTF‑8 encoding
+  * Normalize EOL (splitlines())
+  * JSON serialization with sort_keys=True
+* Sanitize github_repo_url and working_directory.
+* Create working_directory (./data/runs/compliance/<timestamp>/).
+* **DO NOT** include this path in findings (always use repo‑relative paths).
+* Detect docroot (./, web/, docroot/) and log it.
+  
 ## Step 1 - Repository Acquisition  
-* Clone repository from github_repo_url
-* Store locally in working_directory.
+* Clone github_repo_url into working_directory/repo.
+* If git_ref provided → checkout exact revision (SHA/tag/branch).
+* Log git_ref_resolved as SHA.
+* **Do not run** npm/composer build steps.
 
 ## Step 2 — Static Code Analysis (Python)
-The agent MUST generate and execute a Python script named: 
+The agent MUST generate and execute the Python script at: 
 ```
-analyze_drupal_repo.py
+/data/runs/tools/analyze_drupal_repo.py
 ```
-This script performs all static analyses (2.1 → 2.13) on the Drupal repository.
+This script performs all checks (2.1 → 2.13).
 
-**Requirements & Restrictions:**
+### 2.A — Deterministic Requirements
 
-**1. Deterministic analysis only**
-  * The script MUST traverse the repository recursively.
-  * Only scan files with extensions:
+**1) Allowed file extensions**
     ```
     .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
     ```
-  * Ignore directories:
+**2) Strict directory exclusions**
     ```
-    vendor/, node_modules/, .git/, core/
+    .git/
+    vendor/
+    node_modules/
+    core/
+    web/core/
+    docroot/core/
+    sites/*/files/
+    modules/contrib/
+    themes/contrib/
+    profiles/contrib/
+    dist/
+    build/
+    public/build/
+    .cache/
+    .next/
+    .output/
     ```
-  * No randomness; no external API calls; no LLM reasoning.
-    
-**2. Analysis Modules (2.1 → 2.13)**
-The script MUST implement all 13 analyses:
-  * Deprecated API Detection
-  * Dependency Injection Check
-  * Module Metadata Validation
-  * Composer Dependency Analysis
-  * CI/CD Configuration Detection
-  * Routing & Controller Deprecation
-  * Service Definitions
-  * Event Subscribers & Hooks
-  * Theme & Twig Compatibility
-  * PHP 8+ Compatibility
-  * Configuration & Settings
-  * Translation & Locale
-  * Automated Tests
-    
-**3. Output Format**
-* Generate a single deterministic file:
+
+  **3) Sorted traversal**
+  * dirs[:] = sorted(filtered_dirs)
+  * files = sorted(files) before scanning
+
+  **4) Normalization & de‑duplication**
+  * severity = severity.lower()
+  * Unix path separator /
+  * Paths must be repo‑relative
+  * Deduplicate findings using (analysis, file, line, code_snippet)
+  * Final sort: (file, line, analysis, type)
+
+  **5) Stable JSON output**
+  json.dump(..., ensure_ascii=False, indent=2, sort_keys=True)
+
+  **No randomness, no external calls, no LLM in script**
+
+### 2.B — Output Format
+Generate:
 ```
 analysis_results.json
 ```
-* JSON structure:
 ```json
 {
-  "repository": "",
-  "scan_date": "",
-  "findings": []
+  "repository": "<sanitized github_repo_url>",
+  "scan_date": "<ISO8601>",
+  "findings": [
+    {
+      "analysis": "2.x",
+      "type": "<category>",
+      "file": "relative/path/from/repo/root",
+      "line": 0,
+      "code_snippet": "string <= 240 chars, one-line trimmed",
+      "severity": "low | medium | high | critical",
+      "recommendation": "short actionable text"
+    }
+  ]
 }
 ```
-* Each finding MUST include:
-```json
-{
-  "analysis": "2.1",
-  "type": "",
-  "file": "",
-  "line": 0,
-  "code_snippet": "",
-  "severity": "low | medium | high | critical",
-  "recommendation": ""
-}
-```
-* Findings MUST be sorted by file → line before writing.
-  
-**4. LLM Restrictions**
-  * The LLM MUST **not inspect repository files.**
-  * The LLM MUST **not generate, infer, or modify findings**
-  * The LLM MAY read **only:**
-    ```
-    analysis_results.json
-    execution_log.json
-    ```
-  * All reporting, grouping, or summaries in Markdown MUST strictly reflect analysis_results.json.
 
-### 2.1 Deprecated API Detection
-**Objective:**
-Detect all uses of deprecated or discouraged Drupal APIs. Findings must include:
-* file path
-* line number
-* code_snippet
-* severity
-* recommendation
+LLM may read only analysis_results.json + execution_log.json.
 
+###🔍 2.1 Deprecated API Detection (Drupal 11)
+Detect all deprecated or removed APIs including Drupal 11 removals.
 
-**Detection Categories and Patterns**
+**Categories & Patterns**  
+1. **Static service calls** (should use DI)
+   \Drupal::service(, \Drupal::entityTypeManager(, \Drupal::database(, \Drupal::config(,  
+   \Drupal::request(, \Drupal::currentUser(, \Drupal::routeMatch()
+2. **Deprecated procedural APIs**  
+    drupal_set_message(, drupal_get_path(, drupal_render(, drupal_add_js(, drupal_add_css()
+3. **Legacy menu system**
+   hook_menu(
+4. **Legacy Unicode utilities**
+   Unicode::truncate(, Unicode::strlen(, Unicode::substr()
+5. **Legacy entity loading**
+   entity_load(, entity_load_multiple()
+6. **Legacy file APIs**
+   file_create_url(, file_unmanaged_copy()
+7. **Legacy theme functions**
+    theme(
+8. **Legacy form patterns**
+    drupal_get_form(
+9. **Legacy render handling**
+    render(
+10 **Deprecated global container access**
+    Same as #1 (currentUser, routeMatch)
+11. **Drupal 11-specific deprecated APIs**
+    watchdog_exception( → replaced by Error::logException()
+  * EntityStorageInterface::loadRevision( → use RevisionableStorageInterface::loadRevision()
+  * user_roles( / user_role_names( → use Role::loadMultiple()
+  * format_size( → use ByteSizeMarkup::create()
+  * EntityQuery access must specify ->accessCheck(TRUE|FALSE)
 
-**1. Static service calls (should use Dependency Injection)**
+For each match → include required metadata.
 
-Avoid using \Drupal::service() or other global container calls.
-
-```php
-\Drupal::service(
-\Drupal::entityTypeManager(
-\Drupal::database(
-\Drupal::config(
-\Drupal::request(
-```
-
-**2. Deprecated procedural APIs**
-
-Old procedural functions replaced by modern OOP or services.
-
-```php
-drupal_set_message(
-drupal_get_path(
-drupal_render(
-drupal_add_js(
-drupal_add_css(
-```
-
-**3. Deprecated menu system**
-
-Legacy hook-based routing.
-
-
-```php
-hook_menu(
-```
-
-**4. String / Unicode utilities**
-
-Legacy string manipulation functions.
-
-```php
-Unicode::truncate(
-Unicode::strlen(
-Unicode::substr(
-```
-
-**5. Deprecated entity loading**
-
-Legacy string manipulation functions.
-
-```php
-entity_load(
-entity_load_multiple(
-```
-
-**6. Deprecated file functions**
-
-Use modern file system services instead.
-
-```php
-file_create_url(
-file_unmanaged_copy(
-```
-
-**7. Deprecated theme functions**
-
-Deprecated Theme Functions
-
-```php
-theme(
-```
-
-**8. Deprecated form patterns**
-
-Old form-building patterns.
-
-```php
-drupal_get_form(
-```
-
-**9. Deprecated render handling**
-
-Legacy render arrays.
-
-```php
-render(
-```
-
-**10. Deprecated global container usage**
-
-Direct access to current user or route is discouraged.
-
-```php
-\Drupal::currentUser(
-\Drupal::routeMatch(
-```
-
-**11. Deprecated cache usage**
-
-Old cache_get() / cache_set() functions replaced by Cache API services.
-
-```php
-cache_get(
-cache_set(
-```
 
 ### 2.2 Dependency Injection Check
 Identify static service calls that should use Dependency Injection.
@@ -533,5 +469,5 @@ tools/analyze_drupal_repo.py
 # Return
 * Absolute path of run directory:
 ```
-./data/compliance/<timestamp>/
+./data/runs/compliance/<timestamp>/
 ```
