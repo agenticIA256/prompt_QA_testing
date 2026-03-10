@@ -250,7 +250,7 @@ Detect all deprecated or removed APIs including Drupal 11 removals.
 
 For each match → include required metadata.
 
-### 2.2 Dependency Injection Check
+### 🔍 2.2 Dependency Injection Check
 Detect static service calls:
 ```
 \Drupal::service(, \Drupal::entityTypeManager(, etc.
@@ -258,166 +258,147 @@ Detect static service calls:
 * Default severity: medium
 * In controllers/forms/plugins: may be high
 
-### 2.3 Module Metadata Validation
-Parse all .info.yml files.
+### 🔍 2.3 Module Metadata Validation
+* Parse all *.info.yml.
+* Validate core_version_requirement. Flag when:
+    * Contains legacy patterns (core: 8.x, >=8)
+    * Missing support for Drupal 11 (no ^11)
 
-Verify:
-```
-core_version_requirement
-```
+Also flag dependencies on removed Drupal 11 modules (info only).
 
-Flag outdated values such as:
-```
-core: 8.x
->=8
-```
-
-### 2.4 Composer Dependency Analysis
-Parse: 
-```
-composer.json
-```
-Extract:
+### 🔍 2.4 Composer Dependency Analysis
+Parse composer.json. Extract:
 * Drupal core version
 * contrib modules
 * patches
 * composer plugins
-Verify compatibility with Drupal 11 and PHP 8+.
 
-### 2.5 CI/CD Configuration Detection
-Detect pipelines such as:
-```
-azure-pipelines.yml
-.github/workflows/*.yml
-gitlab-ci.yml
-```
-Report presence and note any pipelines that may not target Drupal 11 / PHP 8.1+.
+**Drupal 11 Compatibility Checks**
+* php >= 8.3
+* Recommend use of drupal/core-recommended
+* Composer version must allow ≥ 2.7
+* Symfony ~7
+* Twig >= 3.14.0
+* Required ext-* extensions must match Drupal core needs
 
-### 2.6 Routing & Controller Deprecation
+Severities:
+  * high for incompatible PHP/Drupal core
+  * medium for Twig < 3.14, no core-recommended, etc.
+
+### # 🔍 2.5 CI/CD Configuration Detection
+Detect pipeline configs:
+  * azure-pipelines.yml
+  * .github/workflows/*.yml
+  * gitlab-ci.yml
+
+Check for:
+  * PHP 8.3 in CI matrix
+  * Use of shivammathur/setup-php (if present)
+  * Steps like composer validate
+  * Deployment steps referencing:
+      * drush updb, drush cim, drush cr (info level only)
+
+Severity:
+  * low if PHP 8.3 not tested
+  * info for best-practice notes
+
+### 🔍 2.6 Routing & Controller Deprecation
 Scan:
 * `*.routing.yml` files
-* Deprecated hook_menu() implementations
-* Controllers using removed or legacy methods
+* hook_menu() uses
+* Controllers with deprecated methods
 
-Report:
-```
-file
-line
-code snippet
-recommendation
-```
+### 🔍 2.7 Service Definitions
+Parse `*.services.yml` and flag:
+* Deprecated classes
+* Unnecessary public: true
+* Deprecated factories
+* Recommend injecting interfaces
 
-### 2.7 Service Definitions
-Parse .services.yml files. Check for:
-* Deprecated class: references
-* Public services that should be private
-* Services using deprecated factory methods
+### 🔍 2.8 Event Subscribers & Hooks
+Detect deprecated hooks or subscriber patterns.
 
-### 2.8 Event Subscribers & Hooks
-Detect usage of deprecated hooks or event subscriber patterns, including:
-* hook_form_alter() alternatives
-* Deprecated event subscriber interfaces
+Note Drupal 11 attribute-based alternatives (when applicable).
 
-### 2.9 Theme & Twig Compatibility
-Scan Twig templates for:
-* Deprecated functions or filters
+### 🔍 2.9 Theme & Twig Compatibility
+* Deprecated Twig functions/filters
 * Base theme inheritance issues
+* Twig version < 3.14 captured in Composer step
 
-### 2.10 PHP 8+ Compatibility
-Check all PHP files for:
+### 🔍 2.10 PHP 8+ Compatibility
+Detect:
 * Deprecated PHP functions
-* Type declaration issues
-* Syntax incompatible with PHP 8.1+
+* Missing type declarations
+* **Dynamic properties** (PHP 8.2+ issues)
 
-### 2.11 Configuration & Settings
-Check config/install and config/optional:
+### 🔍 2.11 Configuration & Settings
+Scan:
+* config/install
+* config/optional
+Flag:
 * Deprecated keys
-* Outdated YAML structure
-* Invalid configuration for Drupal 11
+* Invalid Drupal 11 configuration structure
 
-### 2.12 Translation & Locale
-Verify proper use of:
-* t() function or TranslatableMarkup objects
-* Deprecated locale handling functions
+### 🔍 2.12 Translation & Locale
+* Detect improper use of t() (e.g., in services without DI)
+* Deprecated locale API usages
 
-### 2.13 Automated Tests
-Detect test files in the repository, including:
-- tests/src/Kernel/*
-- tests/src/Functional/*
-- tests/src/FunctionalJavascript/*
-- tests/src/Unit/*
+### 🔍 2.13 Automated Tests
+Scan:
+  * tests/src/Kernel/*
+  * Functional/*
+  * FunctionalJavascript/*
+  * Unit/*
 
-For each test file:
+Checks:
+  * Approved PHPUnit base classes
+  * Legacy annotations vs **PHPUnit attributes**
+  * Presence of **#[RunTestsInSeparateProcesses]** in Kernel/Functional/FunctionalJavascript tests
+  * Deprecated API usage in tests
+  * Static container calls (\Drupal::service) flagged as low severity
 
-Verify:
-- Use of supported PHPUnit base classes
-- Compatibility with Drupal 11 testing framework
-- Absence of deprecated Drupal APIs
+## 🧮 Step 3 — Compliance Score Calculation
+Computed **strictly** from analysis_results.json.
 
-Detect patterns such as:
-- Deprecated test base classes
-- Legacy PHPUnit annotations
-- Static service calls (\Drupal::service)
+LLM **must not** generate new findings or modify score.
 
-For each finding return:
-
-type
-file
-line
-code snippet
-severity
-recommendation
-
-## Step 3 — Compliance Score Calculation
-
-The global technical compliance score MUST be calculated strictly from
-```
-analysis_results.json.
-```
-
-The LLM MUST NOT create new findings during this step.
-
-### 3.1 — Define severity weights and total findings
+### 3.1 — Severity weights
 ```python
-# Severity weights
 severity_weights = {
-    "critical": 5,
-    "high": 3,
-    "medium": 2,
-    "low": 1,
-    "info": 0
+  "critical": 5,
+  "high": 3,
+  "medium": 2,
+  "low": 1,
+  "info": 0
 }
-
-# Nombre total de findings
-total_findings = len(analysis_results['findings'])
+total_findings = len(analysis_results["findings"])
 ```
 
 ### 3.2 — Observed points
 ```python
-observed_points = sum(severity_weights.get(f['severity'].lower(), 0) 
-                      for f in analysis_results['findings'])
+observed_points = sum(
+  severity_weights.get(f["severity"].lower(), 0)
+  for f in analysis_results["findings"]
+)
 ```
 
-### 3.3  — Compliance score calculation
+### 3.3  —  Score
 ```python
-# Protection contre division par zéro
 if total_findings == 0:
     compliance_score = 100
 else:
     maximum_possible_points = total_findings * 5
     compliance_score = 100 * (1 - (observed_points / maximum_possible_points))
 ```
-* The calculated compliance_score MUST be written to execution_log.json.
-* The LLM may read this value and include a summary in the Markdown report.
-* The LLM MUST NOT recalculate or modify the score independently.
+Write compliance_score into execution_log.json.
 
 ### 3.4 — Reporting Constraints
-* All findings MUST be directly copied or summarized from analysis_results.json.
-* The LLM cannot add examples, code snippets, or findings not present in the JSON.
-* Grouping, categorization, or Markdown formatting is allowed only for readability, not content generation.
+* All findings must come directly from the JSON.
+* No invented code samples.
+* LLM may format/group only for readability.
 
-## Step 4 – HITL
-* Create hitl_status.json:
+## 🧑‍⚖️ Step 4 – HITL
+### 4.1 — Create hitl_status.json ###
 ```json
 {
   "hitl_validation": {
@@ -427,18 +408,16 @@ else:
   }
 }
 ```
-* Instructions: human reviewer must approve/reject
-* Agent pauses until HITL approval
+Pause until human approval.
 
-### 4.2 - Send to Confluence
-* Only execute if HITL status = approved
+### 4.2 — If approved ###
 * Upload drupal11_audit_report.md to Confluence
-* Update execution_log.json with Confluence URL and timestamp
+* Update execution_log.json with Confluence URL + timestamp
 
 # Outputs / Artifacts
 All artifacts are written to:
 ```
-./data/compliance/<timestamp>/
+./data/runs/compliance/<timestamp>/
 ```
 
 Artifacts: 
