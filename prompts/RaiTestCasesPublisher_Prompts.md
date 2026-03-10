@@ -27,7 +27,7 @@
 - Scope boundaries:
   * NO actions outside scope.
   * NO destructive or privileged operations.
-  * NO credentialed access unless explicitly approved by HITL (le token jira est chargé depuis `tools` et n’est jamais affiché).
+  * NO credentialed access unless explicitly approved by HITL (le token jira est chargé depuis `config` et n’est jamais affiché).
 - Tools allowed: <python | http | jira>
 - HITL Notes:
   * The Orchestrator will pause after GENERATION (DoR check)
@@ -39,7 +39,7 @@
    - Provide ONLY high-level reasoning (no chain-of-thought).
    - Append a “Task Execution Report” listing all operations performed and files read/written.
 2. Data & Security
-   - NEVER output secrets or tokens (le token Jira est lu via `tools` et non journalisé).
+   - NEVER output secrets or tokens (le token Jira est lu via `config` et non journalisé).
    - Sanitize all inputs (URLs, JSON, file paths).
    - Redact any PII encountered.
    - Use least-privilege assumptions.
@@ -77,7 +77,7 @@ DoR (Definition of Ready — pre-run)
 - Upstream artefacts present (traçabilité RISK↔AC↔SCEN si disponible).
 - Naming conventions OK (CASE_*, PRIORITY normalisée).
 - RISK ↔ AC ↔ SCENARIO linkage (if applicable).
-- Data & permissions ready (token via `tools`, base_url/project_key valides).
+- Data & permissions ready (token via `config`, base_url/project_key valides).
 
 DoD (Definition of Done — post-run)
 - Outputs written successfully (bundle + logs + receipts).
@@ -89,7 +89,7 @@ DoD (Definition of Done — post-run)
 1) Load & Validate Inputs
    - Lire `test_cases_path`, valider schéma minimal {cases:[…]}, normaliser `priority` et `locale`.
    - Sanitize (paths/URLs/JSON) et redacter PII; vérifier `xray_mode ∈ {Manual, Automated}` (insensible à la casse).
-   - Charger le token via `tools` (aucune écriture du secret dans les logs).
+   - Charger le token via `config` (aucune écriture du secret dans les logs).
 
 2) Transform & Map (Xray)
    - **Manual** : convertir les steps (action/data/expected) vers la structure Xray, en veillant à fournir `expected_result` pour chaque étape; appliquer, si présents, les overrides projet (ex. liens Test Plans/Sets/Preconditions).
