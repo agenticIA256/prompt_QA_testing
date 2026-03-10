@@ -123,11 +123,11 @@ This script performs all checks (2.1 → 2.13).
 
 ### 2.A — Deterministic Requirements
 
-**1) Allowed file extensions**
+**1) Allowed file extensions**<br/>
     ```
     .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
     ```
-**2) Strict directory exclusions**
+**2) Strict directory exclusions**<br/>
     ```
     .git/
     vendor/
