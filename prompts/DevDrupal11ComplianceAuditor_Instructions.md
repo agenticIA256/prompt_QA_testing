@@ -98,32 +98,7 @@ DoD (Definition of Done — post-run)
 * Clone repository from github_repo_url
 * Store locally in working_directory.
 
-## Step 2 - Repository Scan  
-The repository structure must be indexed to identify key Drupal files:
-```
-composer.json
-composer.lock
-*.info.yml
-*.services.yml
-modules/custom/
-themes/custom/
-```
-A file index must be created.
-
-**IMPORTANT: Deterministic & LLM Restrictions**
-* The repository content MUST be analyzed exclusively by the Python static analysis script.
-* The LLM MUST NOT inspect, read, parse, or reason over any repository source files.
-* The LLM MUST NOT generate findings, recommendations, or severities based on repository content.
-* All findings must originate strictly from analysis_results.json.
-* The LLM is only allowed to read:
-```
-analysis_results.json
-execution_log.json
-```
-* Findings not present in analysis_results.json MUST NOT appear in the final report.
-* **Deterministic constraint**: findings in analysis_results.json must be used as-is, in the order they appear (or sorted by file path → line number). The LLM must not reorder or regroup findings.
-
-## Step 3 — Static Code Analysis (Python)
+## Step 2 — Static Code Analysis (Python)
 The agent MUST generate and execute a Python script named: 
 ```
 analyze_drupal_repo.py
@@ -145,28 +120,27 @@ This script performs all static analyses (3.1 → 3.13) on the Drupal repository
   * No randomness; no external API calls; no LLM reasoning.
     
 **2. Analysis Modules (3.1 → 3.13)**
-
-Each analysis appends findings to a shared list:
-  * run_analysis_3_1() — Deprecated API Detection
-  * run_analysis_3_2() — Dependency Injection Check
-  * run_analysis_3_3() — Module Metadata Validation
-  * run_analysis_3_4() — Composer Dependency Analysis
-  * run_analysis_3_5() — CI/CD Configuration Detection
-  * run_analysis_3_6() — Routing & Controller Deprecation
-  * run_analysis_3_7() — Service Definitions
-  * run_analysis_3_8() — Event Subscribers & Hooks
-  * run_analysis_3_9() — Theme & Twig Compatibility
-  * run_analysis_3_10() — PHP 8+ Compatibility
-  * run_analysis_3_11() — Configuration & Settings
-  * run_analysis_3_12() — Translation & Locale
-  * run_analysis_3_13() — Automated Tests
+The script MUST implement all 13 analyses:
+  * Deprecated API Detection
+  * Dependency Injection Check
+  * Module Metadata Validation
+  * Composer Dependency Analysis
+  * CI/CD Configuration Detection
+  * Routing & Controller Deprecation
+  * Service Definitions
+  * Event Subscribers & Hooks
+  * Theme & Twig Compatibility
+  * PHP 8+ Compatibility
+  * Configuration & Settings
+  * Translation & Locale
+  * Automated Tests
     
 **3. Output Format**
 * Generate a single deterministic file:
 ```
 analysis_results.json
 ```
-* Structure:
+* JSON structure:
 ```json
 {
   "repository": "",
