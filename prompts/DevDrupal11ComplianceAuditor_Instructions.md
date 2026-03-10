@@ -217,7 +217,7 @@ Detect all deprecated or removed APIs including Drupal 11 removals.
 10 **Deprecated global container access**
     Same as #1 (currentUser, routeMatch)
 11. **Drupal 11-specific deprecated APIs**
-    watchdog_exception( → replaced by Error::logException()
+  * watchdog_exception( → replaced by Error::logException()
   * EntityStorageInterface::loadRevision( → use RevisionableStorageInterface::loadRevision()
   * user_roles( / user_role_names( → use Role::loadMultiple()
   * format_size( → use ByteSizeMarkup::create()
