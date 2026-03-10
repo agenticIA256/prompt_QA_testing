@@ -117,7 +117,7 @@ DoD (Definition of Done — post-run)
 ## Step 2 — Static Code Analysis (Python)
 The agent MUST generate and execute the Python script at: 
 ```
-/data/runs/tools/analyze_drupal_repo.py
+./data/runs/tools/analyze_drupal_repo.py
 ```
 This script performs all checks (2.1 → 2.13).
 
@@ -414,48 +414,47 @@ Pause until human approval.
 * Upload drupal11_audit_report.md to Confluence
 * Update execution_log.json with Confluence URL + timestamp
 
-# Outputs / Artifacts
-All artifacts are written to:
+# 📦 Outputs / Artifacts
+Stored in:
 ```
 ./data/runs/compliance/<timestamp>/
 ```
 
-Artifacts: 
-* analysis_results.json
- – Structured JSON produced by Python static analysis scripts
-  - Contains all deterministic findings  
-  - Serves as input for the next agent t
-  - Must never be modified by the LLM
+* **analysis_results.json**
+Deterministic structured JSON.
   
-* drupal11_audit_report.md
-  – Human-readable report containing:
+* **drupal11_audit_report.md**
+Human-readable report containing:
     - Executive summary
     - Compliance score
-    - Findings & recommendations
-    - DoR / HITL checklist
+    - Findings (from JSON)
+    - DoR/HITL checklist
     - Task Execution Report
       
-* execution_log.json
- – RAI-compliant execution metadata including:
-  - run_id
-  - steps performed
-  - tools_called
-  - errors / fallback status
-  - SCI metrics (llm_calls, duration_ms)
-  - outputs (paths to all written files)
-  - compliance_score
+* **execution_log.json**
+Full metadata + compliance score.
     
-* hitl_status.json
-  - Human-in-the-loop validation status
+* **hitl_status.json**
+HITL state.
 
-# Tooling
-The Python static analysis script MUST be generated as:
+# 🛠️ Tooling
+Static analyzer script must be generated as:
 ```
-tools/analyze_drupal_repo.py
+./data/runs/tools/analyze_drupal_repo.py
 ```
 
-# Return
-* Absolute path of run directory:
+Must implement:
+* Sorted traversal
+* Extended exclusions
+* UTF‑8 safe reading
+* Deduplication
+* Final sorted JSON
+* Repo‑relative paths
+* No external API calls
+* Deterministic output guarantees
+
+# 🔙 Return
+Return the absolute run directory:
 ```
 ./data/runs/compliance/<timestamp>/
 ```
