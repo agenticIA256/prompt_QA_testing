@@ -1,5 +1,5 @@
 **Inputs**: 
-```
+json ```
 {
   "test_cases_path": string,
   "jira_base_url": string,
@@ -20,7 +20,7 @@
       }
     }
   }
-}
+}```
 
 **Use ./data as the working directory**.
 
