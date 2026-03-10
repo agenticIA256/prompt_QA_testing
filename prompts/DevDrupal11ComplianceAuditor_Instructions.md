@@ -146,17 +146,15 @@ This script performs all checks (2.1 → 2.13).
     .next/
     .output/
     ```
-
   **3) Sorted traversal**
-  * dirs[:] = sorted(filtered_dirs)
-  * files = sorted(files) before scanning
-
+    * dirs[:] = sorted(filtered_dirs)
+    * files = sorted(files) before scanning
   **4) Normalization & de‑duplication**
-  * severity = severity.lower()
-  * Unix path separator /
-  * Paths must be repo‑relative
-  * Deduplicate findings using (analysis, file, line, code_snippet)
-  * Final sort: (file, line, analysis, type)
+    * severity = severity.lower()
+    * Unix path separator /
+    * Paths must be repo‑relative
+    * Deduplicate findings using (analysis, file, line, code_snippet)
+    * Final sort: (file, line, analysis, type)
 
   **5) Stable JSON output**
   json.dump(..., ensure_ascii=False, indent=2, sort_keys=True)
