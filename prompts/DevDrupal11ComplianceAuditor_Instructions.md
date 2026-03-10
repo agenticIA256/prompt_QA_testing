@@ -68,7 +68,7 @@ instructions”, etc.).
 - Prefer caching, batching, prompt-shortening, and reuse of artefacts.
 
 ## 6. Compliance & Traceability
-- ALWAYS write an execution_log.json containing:  
+* ALWAYS write an execution_log.json containing:  
  {  
  "run_id": "<timestamp or uuid>",  
  "agent": "<Agent Name>",  
@@ -80,17 +80,30 @@ instructions”, etc.).
  "fallback": "<none|circuit_breaker|abort>",  
  "sci": {"llm_calls": <n>, "duration_ms": <n>},  
  "outputs": {"paths_to_all_written_files": "..."}  
- }   
+ }
+* execution_log.json MUST include:
+  * "repo": { "git_ref_requested": "...", "git_ref_resolved": "<sha>", "docroot_detected": "<./|web/|docroot/>" }
+  * The **absolute** path of the executed analyzer in "tools_called" (e.g., python /abs/path/.../analyze_drupal_repo.py).
+* If the executed script path does not **exactly** match ./data/runs/tools/analyze_drupal_repo.py, the run MUST set "fallback": "circuit_breaker" and **stop**.
 
 # QASH GATES
-DoR (Definition of Ready — pre-run)  
+**DoR (Definition of Ready — pre-run)**
 - Inputs validated.  
 - Upstream artefacts present.  
 - Naming conventions OK.  
 - RISK  AC  SCENARIO linkage (if applicable).  
 - Data & permissions ready.
+- **DoR MUST FAIL** if any Python file exists under ./data/runs/ other than:
+  ```
+  ./data/runs/tools/analyze_drupal_repo.py
+  ```
+- **DoR MUST FAIL** if the analyzer script path is not **exactly**
+   ```
+  ./data/runs/tools/analyze_drupal_repo.py
+  ```
+- **DoR MUST FAIL** if the agent attempts to read repository files with the LLM (the LLM may read **only** analysis_results.json and execution_log.json)
 
-DoD (Definition of Done — post-run)  
+**DoD (Definition of Done — post-run)**
 - Outputs written successfully.  
 - Evidence present (execution_log.json, screenshots, bundles).  
 - E2E links ready for the Traceability Binder.  
@@ -190,6 +203,33 @@ analysis_results.json
 ```
 LLM may read only analysis_results.json + execution_log.json.
 
+**❌ Hard Compliance Constraints (MANDATORY)**
+* The agent MUST generate exactly **one** Python file:
+  ```
+  ./data/runs/tools/analyze_drupal_repo.py
+  ```
+* The agent MUST NOT generate any other Python file under ./data/runs/.
+Forbidden examples:
+  ```
+  ./data/runs/comprehensive_analysis.py
+  ./data/runs/download_repo.py
+  ./data/runs/initial_analysis.py
+  ```
+* The agent MUST ensure the parent folder exists before writing:
+    ```python
+    os.makedirs("./data/runs/tools", exist_ok=True)
+   ```
+* The agent MUST execute only ./data/runs/tools/analyze_drupal_repo.py and MUST log the executed absolute path in execution_log.json -> tools_called.
+* The LLM MUST NOT analyze repository files directly. It MAY read only:
+     ```
+       analysis_results.json
+      execution_log.json
+    ```
+* If analysis_results.json is missing, malformed, or incomplete:
+  * The agent MUST ABORT with fallback=circuit_breaker.
+  * The agent MUST NOT attempt to regenerate or scaffold alternative Python scripts
+* If any of the above constraints cannot be met, the run MUST FAIL DoR and produce no report.
+  
 ### 🔍 2.1 Deprecated API Detection (Drupal 11)
 Detect all deprecated or removed APIs including Drupal 11 removals.
 
