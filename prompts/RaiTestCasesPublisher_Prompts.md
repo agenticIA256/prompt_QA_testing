@@ -1,40 +1,33 @@
 **Inputs**: {
-  "test_cases_path": "./data/runs/testcases/<timestamp>/test_cases.json",
-  "jira_base_url": "https://<tenant>.atlassian.net",
-  "jira_project_key": "<PROJ>",
-  "xray_mode": "manual|cucumber",
-  "issue_type": "Test",
-  "locale": "fr|en",
-  "dry_run": true,
-  "labels_default": ["qa","auto-publish"],
-  "components_default": ["<optional>"],
+  "test_cases_path": string,
+  "jira_base_url": string,
+  "jira_project_key": string,
+  "xray_mode": "Manual|Automated",
+  "issue_type": string,
+  "locale": string,
+  "dry_run": boolean (default true),
   "xray_overrides": {
     "manual": {
-      "steps_field_id": "<customfield_id_steps_if_required>",
-      "preconditions_field_id": "<customfield_id_preconditions_if_required>",
-      "risk_field_id": "<customfield_id_risk_if_any>",
+      "steps_field_id": string,
+      "preconditions_field_id": string,
+      "risk_field_id": string,
       "link_to": {
-        "testPlanKeys": ["<TP-123>"],
-        "testSetKeys": ["<TS-456>"],
-        "preconditionKeys": ["<PR-789>"]
+        "testPlanKeys": string,
+        "testSetKeys": string,
+        "preconditionKeys": string
       }
-    },
-    "cucumber": {
-      "feature_group": "Functional/Auth",
-      "tags": ["@ui","@smoke"]
     }
-  },
-  "auth_secret_ref": "TOOLS:JIRA_TOKEN"
+  }
 }
 
 **Use ./data as the working directory**.
 
 **PURPOSE & SCOPE (Governance)**
-- Purpose: Publier de manière fiable et traçable les cas de test issus de l’agent #3 vers **Jira Xray**, en appliquant RAI+QASH (logs structurés, bundle Markdown, traçabilité RISK↔AC↔SCEN↔CASE) et en respectant les pauses HITL (DoR/DoD).
+- Purpose: Publier de manière fiable et traçable les cas de test issus de l’agent RaiTestCaseGenerator vers **Jira Xray**, en appliquant RAI+QASH (logs structurés, bundle Markdown, traçabilité RISK↔AC↔SCEN↔CASE) et en respectant les pauses HITL (DoR/DoD).
 - Scope boundaries:
   * NO actions outside scope.
   * NO destructive or privileged operations.
-  * NO credentialed access unless explicitly approved by HITL (le token est chargé depuis `tools` et n’est jamais affiché).
+  * NO credentialed access unless explicitly approved by HITL (le token jira est chargé depuis `tools` et n’est jamais affiché).
 - Tools allowed: <python | http | jira>
 - HITL Notes:
   * The Orchestrator will pause after GENERATION (DoR check)
@@ -95,24 +88,32 @@ DoD (Definition of Done — post-run)
 **WORKFLOW / STEPS**
 1) Load & Validate Inputs
    - Lire `test_cases_path`, valider schéma minimal {cases:[…]}, normaliser `priority` et `locale`.
-   - Sanitize (paths/URLs/JSON) et redacter PII; vérifier `xray_mode ∈ {manual,cucumber}`.
+   - Sanitize (paths/URLs/JSON) et redacter PII; vérifier `xray_mode ∈ {Manual, Automated}` (insensible à la casse).
    - Charger le token via `tools` (aucune écriture du secret dans les logs).
+
 2) Transform & Map (Xray)
-   - **manual**: convertir steps (action/data/expected) vers la structure Xray; appliquer `xray_overrides.manual.*` (customfields, links).
-   - **cucumber**: générer `.feature` (Feature/Scenario + Given/When/Then, tags) et préparer l’import Xray.
-   - Préparer `mapping_applied.json` (détail du mappage champs génériques → Xray).
+   - **Manual** : convertir les steps (action/data/expected) vers la structure Xray, en veillant à fournir `expected_result` pour chaque étape; appliquer, si présents, les overrides projet (ex. liens Test Plans/Sets/Preconditions).
+   - **Automated** :
+     - si un bloc `bdd` est présent dans le case → générer un fichier `.feature` (Feature/Scenario + Given/When/Then, tags si définis) et créer des Tests Xray de type **Cucumber** ;
+     - sinon → créer des Tests Xray de type **Generic** et enrichir la traçabilité avec un bloc optionnel `automation` (framework/module/test_name/external_id) si fourni.
+   - Préparer `mapping_applied.json` (détail du mappage champs génériques → Xray et des defaults/overrides réellement appliqués).
+
 3) Publish (or Dry-run)
-   - Si `dry_run=true`: produire `receipts.json` (reçus simulés), ne PAS appeler l’API.
-   - Sinon: appels Jira/Xray en **batch (20)**, retries exponentiels (3) + jitter, respect rate-limit.
+   - Si `dry_run=true` : produire `receipts.json` (reçus simulés), ne PAS appeler l’API.
+   - Sinon : appels Jira/Xray en **batch (20)**, retries exponentiels (3) + jitter, respect du rate-limit, journalisation des erreurs contrôlée (sans données sensibles).
+
 4) Post-Publish Linking & Evidence
-   - Récupérer `issueKey`/URLs; lier Test Plans/Sets/Preconditions si configuré.
-   - Agréger payloads et réponses abrégées dans `jira_publisher_bundle.md`.
-5) Write Artefacts (./data/runs/publish_xray/<timestamp>/)
-   - features.json (si fourni en carry-through), flows.json, risks_suspicions.json (ré‑inclusion pour traçabilité)
-   - jira_publisher_bundle.md (résumé + preuves + bloc JIRA + Task Execution Report + DoR/DoD)
-   - execution_log.json (RAI log structuré), mapping_applied.json, receipts.json, errors.json (si besoin)
+   - Récupérer `issueKey`/URLs ; lier aux Test Plans/Sets/Preconditions si configuré par profil interne ou overrides.
+   - Agréger payloads et réponses abrégées dans `jira_publisher_bundle.md` (preuves).
+
+5) Write Artefacts (./data/runs/publish/<timestamp>/)
+   - (si fournis en carry-through) `features.json`, `flows.json`, `risks_suspicions.json` pour la traçabilité globale
+   - `jira_publisher_bundle.md` (résumé + preuves + bloc JIRA prêt à coller + Task Execution Report + DoR/DoD)
+   - `execution_log.json` (RAI log structuré), `mapping_applied.json`, `receipts.json`, `errors.json` (si besoin)
+
 6) DoR/DoD write-backs to Markdown
-   - Insérer les sections DoR/DoD remplies dans le bundle puis pause HITL.
+   - Insérer les sections DoR/DoD remplies dans le bundle puis **pause HITL** (Orchestrateur).
+
 
 **OUTPUTS / ARTEFACTS**
 - features.json : reprise/carry-through (traçabilité)
