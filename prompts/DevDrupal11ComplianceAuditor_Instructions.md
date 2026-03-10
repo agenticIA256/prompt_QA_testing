@@ -190,7 +190,7 @@ analysis_results.json
 ```
 LLM may read only analysis_results.json + execution_log.json.
 
-###🔍 2.1 Deprecated API Detection (Drupal 11)
+### 🔍 2.1 Deprecated API Detection (Drupal 11)
 Detect all deprecated or removed APIs including Drupal 11 removals.
 
 **Categories & Patterns**
