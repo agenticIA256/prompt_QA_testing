@@ -123,11 +123,14 @@ This script performs all checks (2.1 → 2.13).
 
 ### 2.A — Deterministic Requirements
 
-**1) Allowed file extensions**<br/>
+**1) Allowed file extensions**
+
     ```
     .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
-    ```<br/>
-**2) Strict directory exclusions**<br/>
+    ```
+    
+**2) Strict directory exclusions**
+
     ```
     .git/
     vendor/
@@ -145,18 +148,21 @@ This script performs all checks (2.1 → 2.13).
     .cache/
     .next/
     .output/
-    ```<br/>
+    ```
+    
   **3) Sorted traversal**
     * dirs[:] = sorted(filtered_dirs)
-    * files = sorted(files) before scanning<br/>
+    * files = sorted(files) before scanning
+    
   **4) Normalization & de‑duplication**
     * severity = severity.lower()
     * Unix path separator /
     * Paths must be repo‑relative
     * Deduplicate findings using (analysis, file, line, code_snippet)
-    * Final sort: (file, line, analysis, type)<br/>
+    * Final sort: (file, line, analysis, type)
+    
   **5) Stable JSON output**
-  json.dump(..., ensure_ascii=False, indent=2, sort_keys=True)
+    json.dump(..., ensure_ascii=False, indent=2, sort_keys=True)
 
   **No randomness, no external calls, no LLM in script**
 
