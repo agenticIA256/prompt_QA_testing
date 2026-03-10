@@ -284,7 +284,7 @@ Severities:
   * high for incompatible PHP/Drupal core
   * medium for Twig < 3.14, no core-recommended, etc.
 
-### # 🔍 2.5 CI/CD Configuration Detection
+### 🔍 2.5 CI/CD Configuration Detection
 Detect pipeline configs:
   * azure-pipelines.yml
   * .github/workflows/*.yml
