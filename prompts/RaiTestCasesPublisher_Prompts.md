@@ -1,4 +1,6 @@
-**Inputs**: {
+**Inputs**: 
+```
+{
   "test_cases_path": string,
   "jira_base_url": string,
   "jira_project_key": string,
