@@ -188,7 +188,6 @@ analysis_results.json
   ]
 }
 ```
-
 LLM may read only analysis_results.json + execution_log.json.
 
 ###🔍 2.1 Deprecated API Detection (Drupal 11)
@@ -310,10 +309,10 @@ Scan:
 
 ### 🔍 2.7 Service Definitions
 Parse `*.services.yml` and flag:
-* Deprecated classes
-* Unnecessary public: true
-* Deprecated factories
-* Recommend injecting interfaces
+  * Deprecated classes
+  * Unnecessary public: true
+  * Deprecated factories
+  * Recommend injecting interfaces
 
 ### 🔍 2.8 Event Subscribers & Hooks
 Detect deprecated hooks or subscriber patterns.
@@ -327,17 +326,17 @@ Note Drupal 11 attribute-based alternatives (when applicable).
 
 ### 🔍 2.10 PHP 8+ Compatibility
 Detect:
-* Deprecated PHP functions
-* Missing type declarations
-* **Dynamic properties** (PHP 8.2+ issues)
+  * Deprecated PHP functions
+  * Missing type declarations
+  * **Dynamic properties** (PHP 8.2+ issues)
 
 ### 🔍 2.11 Configuration & Settings
 Scan:
-* config/install
-* config/optional
+  * config/install
+  * config/optional
 Flag:
-* Deprecated keys
-* Invalid Drupal 11 configuration structure
+  * Deprecated keys
+  * Invalid Drupal 11 configuration structure
 
 ### 🔍 2.12 Translation & Locale
 * Detect improper use of t() (e.g., in services without DI)
