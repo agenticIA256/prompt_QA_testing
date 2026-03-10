@@ -194,63 +194,69 @@ LLM may read only analysis_results.json + execution_log.json.
 ###🔍 2.1 Deprecated API Detection (Drupal 11)
 Detect all deprecated or removed APIs including Drupal 11 removals.
 
-**Categories & Patterns**  
+**Categories & Patterns**
+
 1. **Static service calls** (should use DI)
-   \Drupal::service(, \Drupal::entityTypeManager(, \Drupal::database(, \Drupal::config(,  
-   \Drupal::request(, \Drupal::currentUser(, \Drupal::routeMatch()
-2. **Deprecated procedural APIs**  
-    drupal_set_message(, drupal_get_path(, drupal_render(, drupal_add_js(, drupal_add_css()
+   - \Drupal::service(
+   - \Drupal::entityTypeManager(
+   - \Drupal::database(
+   - \Drupal::config(
+   - \Drupal::request(
+   - \Drupal::currentUser(
+   - \Drupal::routeMatch(
+
+2. **Deprecated procedural APIs**
+   - drupal_set_message(
+   - drupal_get_path(
+   - drupal_render(
+   - drupal_add_js(
+   - drupal_add_css(
+
 3. **Legacy menu system**
-   hook_menu(
+   - hook_menu(
+
 4. **Legacy Unicode utilities**
-   Unicode::truncate(, Unicode::strlen(, Unicode::substr()
+   - Unicode::truncate(
+   - Unicode::strlen(
+   - Unicode::substr(
+
 5. **Legacy entity loading**
-   entity_load(, entity_load_multiple()
+   - entity_load(
+   - entity_load_multiple(
+
 6. **Legacy file APIs**
-   file_create_url(, file_unmanaged_copy()
+   - file_create_url(
+   - file_unmanaged_copy(
+
 7. **Legacy theme functions**
-    theme(
+   - theme(
+
 8. **Legacy form patterns**
-    drupal_get_form(
+   - drupal_get_form(
+
 9. **Legacy render handling**
-    render(
-10 **Deprecated global container access**
-    Same as #1 (currentUser, routeMatch)
-11. **Drupal 11-specific deprecated APIs**
-  * watchdog_exception( → replaced by Error::logException()
-  * EntityStorageInterface::loadRevision( → use RevisionableStorageInterface::loadRevision()
-  * user_roles( / user_role_names( → use Role::loadMultiple()
-  * format_size( → use ByteSizeMarkup::create()
-  * EntityQuery access must specify ->accessCheck(TRUE|FALSE)
+   - render(
+
+10. **Deprecated global container access**
+   - \Drupal::currentUser(
+   - \Drupal::routeMatch(
+
+11. **Drupal 11–specific deprecated APIs**
+   - watchdog_exception( → replaced by Error::logException()
+   - EntityStorageInterface::loadRevision( → use RevisionableStorageInterface::loadRevision()
+   - user_roles( / user_role_names( → use Role::loadMultiple()
+   - format_size( → use ByteSizeMarkup::create()
+   - EntityQuery access must specify ->accessCheck(TRUE|FALSE)
 
 For each match → include required metadata.
 
-
 ### 2.2 Dependency Injection Check
-Identify static service calls that should use Dependency Injection.
-Patterns to search for:
+Detect static service calls:
 ```
-\Drupal::service(
-\Drupal::entityTypeManager(
-\Drupal::database(
-\Drupal::config(
-\Drupal::currentUser(
+\Drupal::service(, \Drupal::entityTypeManager(, etc.
 ```
-For each occurrence, return:
-```
-file
-line
-code snippet
-severity
-recommendation
-```
-Recommendations MUST be derived strictly from findings present in
-analysis_results.json.
-
-The LLM MUST NOT create new findings, modify severities,
-or infer additional issues.
-
-Only summarization and grouping of existing findings is allowed.
+* Default severity: medium
+* In controllers/forms/plugins: may be high
 
 ### 2.3 Module Metadata Validation
 Parse all .info.yml files.
