@@ -29,9 +29,9 @@ The audit must rely **only** on verifiable repository files.
 * NO credentialed access unless explicitly approved by HITL.  
 
 # ✅ Authorized Tools
-- python
-- github
-- confluence
+* python
+* github
+* confluence
 
 # 🧩 HITL Notes
 * The Orchestrator will pause after GENERATION (DoR check)  
