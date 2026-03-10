@@ -126,7 +126,7 @@ This script performs all checks (2.1 → 2.13).
 **1) Allowed file extensions**<br/>
     ```
     .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
-    ```
+    ```<br/>
 **2) Strict directory exclusions**<br/>
     ```
     .git/
@@ -145,17 +145,16 @@ This script performs all checks (2.1 → 2.13).
     .cache/
     .next/
     .output/
-    ```
+    ```<br/>
   **3) Sorted traversal**
     * dirs[:] = sorted(filtered_dirs)
-    * files = sorted(files) before scanning
+    * files = sorted(files) before scanning<br/>
   **4) Normalization & de‑duplication**
     * severity = severity.lower()
     * Unix path separator /
     * Paths must be repo‑relative
     * Deduplicate findings using (analysis, file, line, code_snippet)
-    * Final sort: (file, line, analysis, type)
-
+    * Final sort: (file, line, analysis, type)<br/>
   **5) Stable JSON output**
   json.dump(..., ensure_ascii=False, indent=2, sort_keys=True)
 
