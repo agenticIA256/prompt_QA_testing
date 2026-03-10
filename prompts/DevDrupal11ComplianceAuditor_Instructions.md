@@ -103,7 +103,7 @@ The agent MUST generate and execute a Python script named:
 ```
 analyze_drupal_repo.py
 ```
-This script performs all static analyses (3.1 → 3.13) on the Drupal repository.
+This script performs all static analyses (2.1 → 2.13) on the Drupal repository.
 
 **Requirements & Restrictions:**
 
@@ -119,7 +119,7 @@ This script performs all static analyses (3.1 → 3.13) on the Drupal repository
     ```
   * No randomness; no external API calls; no LLM reasoning.
     
-**2. Analysis Modules (3.1 → 3.13)**
+**2. Analysis Modules (2.1 → 2.13)**
 The script MUST implement all 13 analyses:
   * Deprecated API Detection
   * Dependency Injection Check
@@ -151,7 +151,7 @@ analysis_results.json
 * Each finding MUST include:
 ```json
 {
-  "analysis": "3.1",
+  "analysis": "2.1",
   "type": "",
   "file": "",
   "line": 0,
@@ -172,7 +172,7 @@ analysis_results.json
     ```
   * All reporting, grouping, or summaries in Markdown MUST strictly reflect analysis_results.json.
 
-### 3.1 Deprecated API Detection
+### 2.1 Deprecated API Detection
 **Objective:**
 Detect all uses of deprecated or discouraged Drupal APIs. Findings must include:
 * file path
@@ -287,7 +287,7 @@ cache_get(
 cache_set(
 ```
 
-### 3.2 Dependency Injection Check
+### 2.2 Dependency Injection Check
 Identify static service calls that should use Dependency Injection.
 Patterns to search for:
 ```
@@ -313,7 +313,7 @@ or infer additional issues.
 
 Only summarization and grouping of existing findings is allowed.
 
-### 3.3 Module Metadata Validation
+### 2.3 Module Metadata Validation
 Parse all .info.yml files.
 
 Verify:
@@ -327,7 +327,7 @@ core: 8.x
 >=8
 ```
 
-### 3.4 Composer Dependency Analysis
+### 2.4 Composer Dependency Analysis
 Parse: 
 ```
 composer.json
@@ -339,7 +339,7 @@ Extract:
 * composer plugins
 Verify compatibility with Drupal 11 and PHP 8+.
 
-### 3.5 CI/CD Configuration Detection
+### 2.5 CI/CD Configuration Detection
 Detect pipelines such as:
 ```
 azure-pipelines.yml
@@ -348,7 +348,7 @@ gitlab-ci.yml
 ```
 Report presence and note any pipelines that may not target Drupal 11 / PHP 8.1+.
 
-### 3.6 Routing & Controller Deprecation
+### 2.6 Routing & Controller Deprecation
 Scan:
 * `*.routing.yml` files
 * Deprecated hook_menu() implementations
@@ -362,40 +362,40 @@ code snippet
 recommendation
 ```
 
-### 3.7 Service Definitions
+### 2.7 Service Definitions
 Parse .services.yml files. Check for:
 * Deprecated class: references
 * Public services that should be private
 * Services using deprecated factory methods
 
-### 3.8 Event Subscribers & Hooks
+### 2.8 Event Subscribers & Hooks
 Detect usage of deprecated hooks or event subscriber patterns, including:
 * hook_form_alter() alternatives
 * Deprecated event subscriber interfaces
 
-### 3.9 Theme & Twig Compatibility
+### 2.9 Theme & Twig Compatibility
 Scan Twig templates for:
 * Deprecated functions or filters
 * Base theme inheritance issues
 
-### 3.10 PHP 8+ Compatibility
+### 2.10 PHP 8+ Compatibility
 Check all PHP files for:
 * Deprecated PHP functions
 * Type declaration issues
 * Syntax incompatible with PHP 8.1+
 
-### 3.11 Configuration & Settings
+### 2.11 Configuration & Settings
 Check config/install and config/optional:
 * Deprecated keys
 * Outdated YAML structure
 * Invalid configuration for Drupal 11
 
-### 3.12 Translation & Locale
+### 2.12 Translation & Locale
 Verify proper use of:
 * t() function or TranslatableMarkup objects
 * Deprecated locale handling functions
 
-### 3.13 Automated Tests
+### 2.13 Automated Tests
 Detect test files in the repository, including:
 - tests/src/Kernel/*
 - tests/src/Functional/*
@@ -423,7 +423,7 @@ code snippet
 severity
 recommendation
 
-## Step 4 — Compliance Score Calculation
+## Step 3 — Compliance Score Calculation
 
 The global technical compliance score MUST be calculated strictly from
 ```
@@ -432,7 +432,7 @@ analysis_results.json.
 
 The LLM MUST NOT create new findings during this step.
 
-### 4.1 — Define severity weights and total findings
+### 3.1 — Define severity weights and total findings
 ```python
 # Severity weights
 severity_weights = {
@@ -447,13 +447,13 @@ severity_weights = {
 total_findings = len(analysis_results['findings'])
 ```
 
-### 4.2 — Observed points
+### 3.2 — Observed points
 ```python
 observed_points = sum(severity_weights.get(f['severity'].lower(), 0) 
                       for f in analysis_results['findings'])
 ```
 
-### 4.3  — Compliance score calculation
+### 3.3  — Compliance score calculation
 ```python
 # Protection contre division par zéro
 if total_findings == 0:
@@ -466,12 +466,12 @@ else:
 * The LLM may read this value and include a summary in the Markdown report.
 * The LLM MUST NOT recalculate or modify the score independently.
 
-### 4.4 — Reporting Constraints
+### 3.4 — Reporting Constraints
 * All findings MUST be directly copied or summarized from analysis_results.json.
 * The LLM cannot add examples, code snippets, or findings not present in the JSON.
 * Grouping, categorization, or Markdown formatting is allowed only for readability, not content generation.
 
-## Step 5 – HITL
+## Step 4 – HITL
 * Create hitl_status.json:
 ```json
 {
@@ -485,7 +485,7 @@ else:
 * Instructions: human reviewer must approve/reject
 * Agent pauses until HITL approval
 
-### 5.2 - Send to Confluence
+### 4.2 - Send to Confluence
 * Only execute if HITL status = approved
 * Upload drupal11_audit_report.md to Confluence
 * Update execution_log.json with Confluence URL and timestamp
