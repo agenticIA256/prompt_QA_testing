@@ -1,5 +1,5 @@
 **Inputs**: 
-json ```
+ ```json
 {
   "test_cases_path": string,
   "jira_base_url": string,
