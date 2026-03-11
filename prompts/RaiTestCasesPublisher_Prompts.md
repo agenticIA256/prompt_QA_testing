@@ -75,17 +75,15 @@
   "run_id": "<timestamp-or-uuid>",
   "agent": "RaiJiraXrayPublisher",
   "purpose": "Publish test cases to Jira Xray",
-  "input": { /* sanitized */ },
-  "steps": [/* high-level actions performed */],
-  "tools_called": ["python","http","jira"],
-  "calls": [
-    {"endpoint":"Jira REST v3","method":"POST","path":"/rest/api/3/issue","status":201},
-    {"endpoint":"Xray GraphQL","method":"POST","path":"/api/v2/graphql","status":200}
-  ],
-  "created": {"issues":["<PROJ-123>","<PROJ-124>"]},
-  "errors": [/* sanitized summaries, if any */],
-  "fallback": "<none|circuit_breaker
-}
+  "input": {...},
+  "steps": [...],
+  "tools_called": [...],
+  "errors": [...],
+  "fallback": "<none|circuit_breaker|abort>",
+  "sci": {"llm_calls": <n>, "duration_ms": <n>},
+  "outputs": {"paths_to_all_written_files": "..."}
+  }
+
    - Provide a ready-to-paste JIRA ticket body block inside the Markdown bundle (if applicable).
    - Ensure the bundle includes a concise DoR/DoD checklist outcome and a link list to every receipt/evidence artefact.
 
