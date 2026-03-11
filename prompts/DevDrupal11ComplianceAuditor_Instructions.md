@@ -180,7 +180,7 @@ This script performs all checks (2.1 → 2.13).
     
 **2) Strict directory exclusions**
 
-    ```
+  ```
       .git/
       vendor/
       node_modules/
@@ -197,7 +197,7 @@ This script performs all checks (2.1 → 2.13).
       .cache/
       .next/
       .output/
-    ```
+  ```
     
   **3) Sorted traversal**
     * dirs[:] = sorted(filtered_dirs)
