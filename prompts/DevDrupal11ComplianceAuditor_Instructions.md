@@ -109,6 +109,8 @@ instructions”, etc.).
 - **DoR MUST FAIL** if the LLM attempts to read repository files (LLM may read only analysis_results.json and execution_log.json).
 - **DoR MUST FAIL** if the agent invokes any GitHub API calls intended to  inspect repository content (get_file_content, get_directory_content, read_file, get_repository) instead of relying on the ZIP snapshot.
 - **DoR MUST FAIL** if the agent resolves the commit SHA using the GitHub API. The ONLY valid SHA source is the ZIP folder name
+- Exception allowed: **one** metadata-only call to resolve the commit SHA
+  (`GET /repos/{owner}/{repo}/commits/{ref}`) when `git_ref` is a branch/tag.
 
 **DoD (Definition of Done — post-run)**
 - Outputs written successfully.  
@@ -143,36 +145,53 @@ If `git_ref` is **not** a 40‑character SHA (e.g., `main`, `develop`, a tag):
   owner-repo-<sha>/
   ``` 
 - This guarantees that the commit SHA can be **derived from the extracted folder name**.
-- The commit SHA **MUST NOT** be resolved via GitHub API.
+- The commit SHA MUST NOT be resolved via GitHub API (see the exception below).
 
 **ZIPBALL folder validation rule (required for deterministic SHA)**  
 When using zipball, the extracted root folder MUST strictly match the pattern:
 ```
 owner-repo-<40-hex-sha>/
 ```
-If the extracted folder does NOT end with a 40‑character lowercase hexadecimal SHA  
-(e.g., if GitHub provides a short SHA like 7 chars, or a name like `repo-main/`),  
-then the analyzer MUST FAIL immediately with:
-```
-fallback = "circuit_breaker" STOP (no report)
-```
-Short SHAs (7 chars) in the extracted ZIPBALL folder name are acceptable **only if**
-the analyzer deterministically recovers the **full 40‑hex SHA** from the **same zipball HTTP response**
-(no GitHub content API calls).
-If the full SHA cannot be recovered → fallback="circuit_breaker".
+If the folder ends with a 7‑char short SHA (e.g., `repo-<short>`), the analyzer MUST attempt to
+recover the full 40‑hex SHA from the SAME zipball HTTP transaction (no content API calls).
+If the full SHA cannot be recovered from that transaction, apply the **SHA Resolution Exception** below.
+
 
 **ZIPBALL SHA derivation (no API)**
-If the extracted ZIPBALL folder ends with a 7‑char short SHA, the analyzer MUST derive the
-full 40‑hex commit SHA from the **same HTTP transaction** using the first available source:
-
-1) the final **redirected URL** (Location) of the zipball request, if it ends with a 40‑hex SHA;
-2) the **Content-Disposition filename** of the zipball response, if it contains a 40‑hex SHA;
-3) any **X- headers** provided by the zipball response that carry a 40‑hex commit id.
+If a 7‑char short SHA is found in the folder name, derive the full 40‑hex commit SHA from:
+1) the final **redirect URL** (Location) of the zipball request if it ends with a 40‑hex SHA;  
+2) the **Content-Disposition filename** if it contains a 40‑hex SHA;  
+3) any **X- headers** of the zipball response that carry a 40‑hex commit id.
 
 If none of these yields a 40‑hex SHA → `fallback = "circuit_breaker"` and **STOP** (no report).
 
-The analyzer MUST log the `repo.git_ref_resolved` and the **source** used:
-`"sha_source": "zipball.folder" | "zipball.redirect_url" | "zipball.content_disposition" | "zipball.header"`.
+The analyzer MUST log the resolved SHA and the source used in `execution_log.json`, e.g.:
+```
+"sha_source": "zipball.folder" | "zipball.redirect_url" | "zipball.content_disposition" | "zipball.header"
+```
+
+**SHA Resolution Exception (metadata-only, single call)**
+If `git_ref` is a branch or tag and the zipball HTTP response does NOT expose a 40‑hex SHA,
+the analyzer MAY perform exactly **one** metadata-only API call to resolve the full commit SHA:
+```
+ GET https://api.github.com/repos/{owner}/{repo}/commits/{ref}
+```
+
+Rules:
+- Allowed **only** to obtain the 40‑hex commit SHA; no repository file content may be read. 
+- Log in `execution_log.json`: `"sha_resolution": { "method": "api.commits", "endpoint": "<url>", "status": <code> }`
+- If the call fails or does NOT return a 40‑hex SHA → `fallback = "circuit_breaker"`.
+
+Once the 40‑hex SHA is known, the analyzer MUST download the ZIP via **codeload**:
+```
+https://codeload.github.com/{owner}/{repo}/zip/<resolved_sha>
+```
+
+Set:
+```
+repo.clone_method = "zip"
+repo.git_ref_resolved = "<resolved_sha>"
+```
 
 **ZIP URL (public repos):**  
 https://codeload.github.com/{owner}/{repo}/zip/{git_ref}
@@ -185,33 +204,20 @@ GET https://api.github.com/repos/{owner}/{repo}/zipball/{git_ref}
 with Authorization: Bearer <token>
 
 **The analyzer MUST:**
-1) Build the ZIP URL from github_repo_url + git_ref.  
-   - use **codeload** when `git_ref` is a full 40‑char SHA, OR
-   - use **zipball** when `git_ref` is a branch or tag (not a SHA).
-2) Download with Python (urllib or requests) → <working_directory>/repo.zip.  
-3) Extract with Python zipfile → `<working_directory>/repo/`.
-
-   - **3.1)** Before extraction, the analyzer MUST ensure that `<working_directory>/repo/` is empty.  
-     If it already exists, the analyzer MUST delete its contents before extracting.
-
-   - **3.2)** After extraction, there MUST be **exactly ONE** root directory inside  
-     `<working_directory>/repo/`.  
-     If more than one directory exists (e.g., both `repo-main/` and `owner-repo-<sha>/`),  
-     the analyzer MUST FAIL with:
-     ```
-     fallback = "circuit_breaker"
-     STOP (no report)
-     ```
-5) Detect the unique root directory **owner-repo-<sha>/** created by GitHub and derive the **real commit SHA** from the folder name.
+1) If `git_ref` is a 40‑hex SHA → use **codeload** with that SHA.
+2) Else (branch/tag) → try **zipball**. If the extracted folder does NOT end with a 40‑hex SHA, use the **SHA Resolution Exception** above to resolve the full SHA.
+3) Download the final ZIP (preferably **codeload** with the resolved SHA) → `<working_directory>/repo.zip`.
+4) Extract to `<working_directory>/repo/` (ensure empty; exactly ONE root folder).
+5) Detect the unique root directory that ends with `-<sha>/` (e.g., `owner-repo-<sha>/` or `repo-<sha>/`) and derive the **real 40‑hex commit SHA** from the folder name.
 6) The analyzer MUST set:
   ```
   repo.clone_method = "zip"
   repo.git_ref_resolved = "<40‑character SHA derived from the ZIP folder>"
   ```
 7) Analyze **the full extracted snapshot** (no sampling, no partial fetch)
-8) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results..
-9) The analyzer MUST NOT call GitHub API to read repository contents (get_file_content, get_directory_content, read_file, get_repository). These calls are STRICTLY FORBIDDEN except for metadata validation
-10) The commit SHA MUST NOT be resolved via GitHub API. SHA MUST come ONLY from the ZIP folder structure.
+8) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results.
+9) The analyzer MUST NOT call GitHub API to read repository contents (`get_file_content`, `get_directory_content`, `read_file`, `get_repository`) — **except the single SHA Resolution Exception above**.
+10) The commit SHA MUST NOT be resolved via GitHub API — **except the single SHA Resolution Exception above**.
 11) If ZIP download, extraction, or SHA derivation fails → set fallback="circuit_breaker" and STOP (no report)
 
 ## Step 2 — Static Code Analysis (Python)
