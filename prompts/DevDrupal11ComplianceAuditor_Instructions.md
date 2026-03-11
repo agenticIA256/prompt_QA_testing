@@ -246,6 +246,47 @@ os.makedirs("./data/runs/tools", exist_ok=True)
 
 This script performs all checks (2.1 → 2.13).
 
+---
+
+ **Execution Interface (canonical call)**  
+When the analyzer script already exists, the agent MUST NOT regenerate it and MUST call it  
+with **EXACTLY 3 positional arguments**. Two supported signatures exist:
+
+ **( A ) URL/REF/WORKDIR signature (preferred)** 
+```
+python ./data/runs/tools/analyze_drupal_repo.py "<repo_root_abs>" "<commit_sha_40>" "<output_path_abs>"
+```
+
+**Rules:**
+- The agent **MUST NOT** pass a **4th argument** or any extra flags.  
+- The agent MUST use **absolute paths** for `<repo_root_abs>` and `<output_path_abs>`.  
+- The agent MUST log the exact command (full absolute path) in  
+  `execution_log.json.tools_called`.
+
+---
+
+**Auto‑detection of expected signature (no regeneration) — ADDED**  
+Before execution, the agent MUST detect which signature the existing script expects,  
+**WITHOUT modifying the script**:
+
+1. Read the first ~200 lines of `analyze_drupal_repo.py` and identify the expected arguments  
+   via a `Usage:` line or inspection of the `main()` signature; **OR**
+2. Perform a dry run:
+   ```
+   python ./data/runs/tools/analyze_drupal_repo.py --help
+   ```
+   (Ignore non‑zero exit.) Parse the usage text to infer expected parameters.
+
+ **Decision logic:**
+- If the script expects `<repo_url> <git_ref> <working_dir>` → use signature **(A)**  
+- If the script expects `<repo_root_abs> <commit_sha_40> <output_path_abs>` → use signature **(B)**  
+- If neither matches → `fallback="circuit_breaker"` and STOP
+
+If the first attempt produces an "arguments/Usage" error, the agent MAY try the **other** signature **ONCE**.  
+If still failing → `fallback="circuit_breaker"`.
+
+---
+
 **HARD COMPLIANCE CONSTRAINTS (MANDATORY)**
 * The agent MUST generate exactly **one** Python file: ./data/runs/tools/analyze_drupal_repo.py.
 * The agent MUST NOT generate **any** other Python file under ./data/runs/. If any exists → ABORT with fallback=circuit_breaker.
