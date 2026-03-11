@@ -2,7 +2,7 @@
  ``` json
 {
   "test_cases_path": string,
-  "jira_base_url": string,
+  "jira_server_url": string,
   "jira_project_key": string,
   "xray_mode": "Manual|Automated",
   "issue_type": string,
