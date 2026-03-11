@@ -174,9 +174,9 @@ This script performs all checks (2.1 → 2.13).
 
 **1) Allowed file extensions**
 
-    ```
-      .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
-    ```
+  ```
+    .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
+  ```
     
 **2) Strict directory exclusions**
 
