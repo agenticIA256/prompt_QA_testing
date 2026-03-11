@@ -133,7 +133,18 @@ instructions”, etc.).
 ## Step 1 - Repository Acquisition (ZIP‑only, no git)
 
 The analyzer **MUST ALWAYS** download a ZIP snapshot of the repository (**NOT** git clone).
-  
+
+**Ref selection rule (zipball for branch/tag)**
+If `git_ref` is **not** a 40‑character SHA (e.g., `main`, `develop`, a tag):
+- the analyzer **SHOULD** use the **zipball** endpoint:
+  `GET https://api.github.com/repos/{owner}/{repo}/zipball/{git_ref}`
+- The archive **always** extracts to:
+  ```
+  owner-repo-<sha>/
+  ``` 
+- This guarantees that the commit SHA can be **derived from the extracted folder name**.
+- The commit SHA **MUST NOT** be resolved via GitHub API.
+
 **ZIP URL (public repos):**  
 https://codeload.github.com/{owner}/{repo}/zip/{git_ref}
 
@@ -146,6 +157,8 @@ with Authorization: Bearer <token>
 
 **The analyzer MUST:**
 1) Build the ZIP URL from github_repo_url + git_ref.  
+   - use **codeload** when `git_ref` is a full 40‑char SHA, OR
+   - use **zipball** when `git_ref` is a branch or tag (not a SHA).
 2) Download with Python (urllib or requests) → <working_directory>/repo.zip.  
 3) Extract with Python zipfile → <working_directory>/repo/.  
 4) Detect the unique root directory **owner-repo-<sha>/** created by GitHub and derive the **real commit SHA** from the folder name.
