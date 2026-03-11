@@ -131,6 +131,8 @@ instructions”, etc.).
 - **DoR MUST FAIL** if `instructions.sha256` is missing in `execution_log.json` or if the fetched file is empty.
 - **DoR MUST FAIL** if the agent calls `get_file_content`, `get_directory_content`, `read_file`, or `get_repository` to read any repository content EXCEPT the single allowed instruction file above.
 - **DoR MUST FAIL** if the agent resolves the instruction ref via API in a way that contradicts the requested `<instruction_ref>`; pin to the requested ref (SHA recommended).
+- **DoR MUST FAIL** if any GitHub API call is used to resolve commit SHA. Allowed = ZIP folder only. Not allowed = API-based SHA resolution.
+
 
 **DoD (Definition of Done — post-run)**
 - Outputs written successfully.  
@@ -233,7 +235,8 @@ If validation fails →
     - `get_repository`
 
 11) **The commit SHA MUST NOT be resolved via GitHub API.** It MUST come **only** from the folder name inside the extracted ZIP.
-12) If ZIP download, extraction, or SHA derivation fails →
+12) **The analyzer MUST FAIL DoR** if it attempts to resolve the commit SHA via GitHub API (for example by calling get_repository or get_commit). The ONLY valid source for the SHA is the extracted ZIP folder name.
+13) If ZIP download, extraction, or SHA derivation fails →
  Set:
  ```
  fallback = "circuit_breaker"
