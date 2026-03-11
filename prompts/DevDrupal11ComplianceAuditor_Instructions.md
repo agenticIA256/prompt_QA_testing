@@ -178,33 +178,68 @@ instructions”, etc.).
 * **DO NOT** include this path in findings (always use repo‑relative paths).
 * Detect docroot (./, web/, docroot/) and log it.
   
-## Step 1 - Repository Acquisition (ZIP‑only, no git)
+## Step 1 — Repository Acquisition (ZIP‑only, no git)
 
 The analyzer **MUST ALWAYS** download a ZIP snapshot of the repository (**NOT** git clone).
-  
-**ZIP URL (public repos):**  
+
+### ✔️ Correct ZIP URL (public repos)
 https://codeload.github.com/{owner}/{repo}/zip/{git_ref}
 
-**Example:**  
+### ✔️ Example  
 https://codeload.github.com/agenticIA256/24h-tremblant/zip/main
 
-**ZIP URL (private repos, HITL‑approved token required):**  
+### ✔️ ZIP URL (private repos, HITL-approved token required)
 GET https://api.github.com/repos/{owner}/{repo}/zipball/{git_ref}  
 with Authorization: Bearer <token>
 
+---
+
+## ⚠️ STRICTLY FORBIDDEN ZIP URL (non-deterministic)
+https://github.com/{owner}/{repo}/archive/refs/heads/{git_ref}.zip
+
+The analyzer **MUST NOT** use archive/refs/heads ZIPs because they **do NOT include the commit SHA in the extracted folder**, which breaks reproducibility and traceability.
+
 **The analyzer MUST:**
-1) Build the ZIP URL from github_repo_url + git_ref.  
-2) Download with Python (urllib or requests) → <working_directory>/repo.zip.  
-3) Extract with Python zipfile → <working_directory>/repo/.  
-4) Detect the unique root directory **owner-repo-<sha>/** created by GitHub and derive the **real commit SHA** from the folder name.
-5) The analyzer MUST set:
-   * repo.clone_method = "zip"
-   * repo.git_ref_resolved = "<40‑character SHA derived from the ZIP folder>"
-6) Analyze **the full extracted snapshot** (no sampling, no partial fetch)
-7) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results.
-8) The analyzer MUST NOT call GitHub API to read repository contents (get_file_content, get_directory_content, read_file, get_repository). These calls are STRICTLY FORBIDDEN except for metadata validation
-9) The commit SHA MUST NOT be resolved via GitHub API. SHA MUST come ONLY from the ZIP folder structure.
-10) If ZIP download, extraction, or SHA derivation fails → set fallback="circuit_breaker" and STOP (no report)
+1) **Build the ZIP URL** from github_repo_url + git_ref using the **codeload.github.com** pattern.
+2) **Download** the ZIP using Python (urllib or requests) into:
+    <working_directory>/repo.zip.  
+3) **Extract** the ZIP using Python’s `zipfile` module into:
+    <working_directory>/repo/.  
+4) **Identify the single root folder** created by GitHub.  This folder MUST follow the pattern:
+    owner-repo-<sha>/
+5) **Parse the commit SHA from the folder name**:
+   - folder_name = extracted_root_folder
+   - sha = folder_name.split('-')[-1]
+6) **Validate the SHA**:
+   - `len(sha) == 40`
+   - all characters are hexadecimal (0-9, a-f)
+    
+If validation fails →  
+**STOP immediately** →  
+`fallback = "circuit_breaker"`  
+→ **produce NO report**.
+
+7) **Write into execution_log.json**:
+    repo.clone_method = "zip" repo.git_ref_resolved = "<40-character SHA derived from the ZIP folder>"
+8) **Analyze the full extracted snapshot**: No partial scanning, no sampling, no selective fetching.
+9) **NEVER**:
+    - use git clone
+    - fetch individual files
+    - reuse previous run results
+10) **The analyzer MUST NOT call GitHub API** to read repository contents:  Forbidden calls (except Step 0‑bis for instruction file):
+    - `get_file_content`  
+    - `get_directory_content`  
+    - `read_file`  
+    - `get_repository`
+
+11) **The commit SHA MUST NOT be resolved via GitHub API.** It MUST come **only** from the folder name inside the extracted ZIP.
+12) If ZIP download, extraction, or SHA derivation fails →
+ Set:
+ ```
+ fallback = "circuit_breaker"
+ ```
+ And **STOP immediately** (no report).
+
 
 ## Step 2 — Static Code Analysis (Python)
 The agent MUST generate and execute: 
@@ -536,6 +571,7 @@ Pause until human approval.
 * The report MUST reflect analysis_results.json and the compliance score from execution_log.json ONLY.
 * The report MUST NOT include editorial “positive aspects”, invented code snippets, invented line numbers, or conclusions not present in analysis_results.json.
 * Grouping/formatting for readability is allowed; no inference or extrapolation.
+* The report MUST NOT include delivery plans, timelines, effort estimates ("40–60 hours"), or roadmaps.
 
 # 📦 Outputs / Artifacts
 Stored in:
@@ -569,6 +605,8 @@ The static analyzer script MUST be generated at:
 The agent MUST create its parent folder before writing and log the absolute path executed in tools_called.
 
 If any other Python file appears under ./data/runs/, the run MUST abort with fallback=circuit_breaker and produce no report.
+
+The analyzer MUST use codeload ZIP and MUST derive SHA from ZIP folder.
 
 ---
 
