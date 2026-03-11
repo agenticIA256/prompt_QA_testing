@@ -23,7 +23,7 @@
 }
 ```
 
-* Use ./data as the working directory.
+
 
 # PURPOSE & SCOPE (Governance)
 - **Purpose**: Reliably and traceably publish the test cases produced by the RaiTestCaseGenerator agent to **Jira Xray Cloud**, applying RAI+QASH (structured logs, Markdown bundle, RISK↔AC↔SCEN↔CASE traceability) and honoring HITL pauses (DoR/DoD).
