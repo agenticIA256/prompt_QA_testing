@@ -145,6 +145,21 @@ If `git_ref` is **not** a 40‑character SHA (e.g., `main`, `develop`, a tag):
 - This guarantees that the commit SHA can be **derived from the extracted folder name**.
 - The commit SHA **MUST NOT** be resolved via GitHub API.
 
+**ZIPBALL folder validation rule (required for deterministic SHA)**  
+When using zipball, the extracted root folder MUST strictly match the pattern:
+```
+owner-repo-<40-hex-sha>/
+```
+If the extracted folder does NOT end with a 40‑character lowercase hexadecimal SHA  
+(e.g., if GitHub provides a short SHA like 7 chars, or a name like `repo-main/`),  
+then the analyzer MUST FAIL immediately with:
+```
+fallback = "circuit_breaker" STOP (no report)
+```
+Short SHAs (7 chars) and branch‑style folder names (`repo-main/`) are NOT accepted.  
+Only a ZIPBALL folder containing a **full 40‑hex SHA** is valid.
+
+
 **ZIP URL (public repos):**  
 https://codeload.github.com/{owner}/{repo}/zip/{git_ref}
 
@@ -160,16 +175,30 @@ with Authorization: Bearer <token>
    - use **codeload** when `git_ref` is a full 40‑char SHA, OR
    - use **zipball** when `git_ref` is a branch or tag (not a SHA).
 2) Download with Python (urllib or requests) → <working_directory>/repo.zip.  
-3) Extract with Python zipfile → <working_directory>/repo/.  
-4) Detect the unique root directory **owner-repo-<sha>/** created by GitHub and derive the **real commit SHA** from the folder name.
-5) The analyzer MUST set:
-   * repo.clone_method = "zip"
-   * repo.git_ref_resolved = "<40‑character SHA derived from the ZIP folder>"
-6) Analyze **the full extracted snapshot** (no sampling, no partial fetch)
-7) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results..
-8) The analyzer MUST NOT call GitHub API to read repository contents (get_file_content, get_directory_content, read_file, get_repository). These calls are STRICTLY FORBIDDEN except for metadata validation
-9) The commit SHA MUST NOT be resolved via GitHub API. SHA MUST come ONLY from the ZIP folder structure.
-10) If ZIP download, extraction, or SHA derivation fails → set fallback="circuit_breaker" and STOP (no report)
+3) Extract with Python zipfile → `<working_directory>/repo/`.
+
+   - **3.1)** Before extraction, the analyzer MUST ensure that `<working_directory>/repo/` is empty.  
+     If it already exists, the analyzer MUST delete its contents before extracting.
+
+   - **3.2)** After extraction, there MUST be **exactly ONE** root directory inside  
+     `<working_directory>/repo/`.  
+     If more than one directory exists (e.g., both `repo-main/` and `owner-repo-<sha>/`),  
+     the analyzer MUST FAIL with:
+     ```
+     fallback = "circuit_breaker"
+     STOP (no report)
+     ```
+5) Detect the unique root directory **owner-repo-<sha>/** created by GitHub and derive the **real commit SHA** from the folder name.
+6) The analyzer MUST set:
+  ```
+  repo.clone_method = "zip"
+  repo.git_ref_resolved = "<40‑character SHA derived from the ZIP folder>"
+  ```
+7) Analyze **the full extracted snapshot** (no sampling, no partial fetch)
+8) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results..
+9) The analyzer MUST NOT call GitHub API to read repository contents (get_file_content, get_directory_content, read_file, get_repository). These calls are STRICTLY FORBIDDEN except for metadata validation
+10) The commit SHA MUST NOT be resolved via GitHub API. SHA MUST come ONLY from the ZIP folder structure.
+11) If ZIP download, extraction, or SHA derivation fails → set fallback="circuit_breaker" and STOP (no report)
 
 ## Step 2 — Static Code Analysis (Python)
 
