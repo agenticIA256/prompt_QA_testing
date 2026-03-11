@@ -31,7 +31,7 @@
 - **Scope boundaries**:
   * NO actions outside scope.
   * NO destructive or privileged operations (no bulk deletion, no schema/project changes).
-  * NO credentialed access unless explicitly approved by HITL (Jira/Xray secrets are loaded from `config` and are **never** logged).
+  * NO credentialed access unless explicitly approved by HITL (Jira/Xray secrets are loaded from `./config/config.json` and are **never** logged).
   * **Jira Cloud only**: issue creation via **Jira REST v3**; **Xray Cloud only**: imports via **Xray REST v2** and management of Steps via **Xray GraphQL** (no writes to any `customfield_*` for Steps).
   * If the project is not “Xray‑enabled” (e.g., *Test* issue type missing), the agent **fails DoR** and exits cleanly (no publish calls).
 
@@ -52,7 +52,7 @@
    - Append a Task Execution Report that lists: operations performed, files read/written, remote endpoints called (method, path, status), items created/updated (issue keys), and any user‑visible side effects.
    - Record tool/library versions used (agent version, Jira/Xray API versions).
 2. Data & Security
-   - NEVER  output secrets or tokens. Jira/Xray credentials are loaded from config and are never logged.
+   - NEVER  output secrets or tokens. Jira/Xray credentials are loaded from ./config/config.json and are never logged.
    - Sanitize all inputs (URLs, JSON, file paths).
    - Redact any PII encountered.
    - Use least-privilege assumptions.
@@ -100,7 +100,7 @@
 - **Upstream artifacts present** (RISK↔AC↔SCEN traceability, if available).
 - **Naming conventions OK** (`CASE_*`, normalized `PRIORITY`).
 - **RISK ↔ AC ↔ SCENARIO linkage** (if applicable).
-- **Data & permissions ready** (token available via `config`, valid `base_url` / `project_key`).
+- **Data & permissions ready** (token available via `./config/config.json`, valid `base_url` / `project_key`).
 - **Xray Cloud readiness**
   * Xray is installed and the project is **Xray-enabled** (Xray issue types are present, including **Test**).
   * **Test Types** available (**Manual/Generic/Cucumber**) and a default value is set.
