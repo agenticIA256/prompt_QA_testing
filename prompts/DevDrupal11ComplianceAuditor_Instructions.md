@@ -225,41 +225,43 @@ The analyzer **MUST NOT** use this ZIP because it does NOT include the commit SH
     ```
      If <working_directory>/repo/ exists → delete or empty it. After extraction, there MUST be exactly ONE directory. If more than one directory exists → fallback="circuit_breaker".
     ```
-5) **Extract** the ZIP using Python’s `zipfile` module into:
+4) **Extract** the ZIP using Python’s `zipfile` module into:
     <working_directory>/repo/.  
-6) **Identify the single root folder** created by GitHub.  This folder MUST follow the pattern:
+5) **Identify the single root folder** created by GitHub.  This folder MUST follow the pattern:
     owner-repo-<sha>/
-7) **Parse the commit SHA from the folder name**:
+6) **Parse the commit SHA from the folder name**:
    - folder_name = extracted_root_folder
    - sha = folder_name.split('-')[-1]
-8) **Validate the SHA**:
-   - `len(sha) == 40`
-   - all characters are hexadecimal (0-9, a-f)
-    
-If validation fails →  
-**STOP immediately** →  
-`fallback = "circuit_breaker"`  
-→ **produce NO report**.
-
-7) **Write into execution_log.json**:
+7) **Validate the SHA**:
+  ```
+   `len(sha) == 40`
+   all characters are hexadecimal (0-9, a-f)
+  ```   
+  If validation fails:
+  **STOP immediately** →  
+  ```
+  fallback = "circuit_breaker"
+  STOP IMMEDIATELY
+  ```
+8) **Write into execution_log.json**:
   ```
   repo.clone_method = "zip"
   repo.git_ref_resolved = "<40-character SHA derived from the ZIP folder>"
   ```
-8) **Analyze the full extracted snapshot**: No partial scanning, no sampling, no selective fetching.
-9) **NEVER**:
+9) **Analyze the full extracted snapshot**: No partial scanning, no sampling, no selective fetching.
+10) **NEVER**:
     - use git clone
     - fetch individual files
     - reuse previous run results
-10) **The analyzer MUST NOT call GitHub API** to read repository contents:  Forbidden calls (except Step 0‑bis for instruction file):
+11) **The analyzer MUST NOT call GitHub API** to read repository contents:  Forbidden calls (except Step 0‑bis for instruction file):
     - `get_file_content`  
     - `get_directory_content`  
     - `read_file`  
     - `get_repository`
 
-11) **The commit SHA MUST NOT be resolved via GitHub API.** It MUST come **only** from the folder name inside the extracted ZIP.
-12) **The analyzer MUST FAIL DoR** if it attempts to resolve the commit SHA via GitHub API (for example by calling get_repository or get_commit). The ONLY valid source for the SHA is the extracted ZIP folder name.
-13) If ZIP download, extraction, or SHA derivation fails →
+12) **The commit SHA MUST NOT be resolved via GitHub API.** It MUST come **only** from the folder name inside the extracted ZIP.
+13) **The analyzer MUST FAIL DoR** if it attempts to resolve the commit SHA via GitHub API (for example by calling get_repository or get_commit). The ONLY valid source for the SHA is the extracted ZIP folder name.
+14) If ZIP download, extraction, or SHA derivation fails →
  Set:
  ```
  fallback = "circuit_breaker"
