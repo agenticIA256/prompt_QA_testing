@@ -43,7 +43,6 @@
   * The Orchestrator will pause after **GENERATION** (DoR check),
   * and after **EXECUTION** (DoD check),
   * before continuing to the next agent.
-  * **Publication guard**: `dry_run` remains `true` by default; switching to `dry_run=false` happens **only** after explicit HITL approval (`publish_confirmed=true` in the run context).
 
 
 **RAI RULES**
