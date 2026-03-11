@@ -184,35 +184,55 @@ instructions”, etc.).
 
 The analyzer **MUST ALWAYS** download a ZIP snapshot of the repository (**NOT** git clone).
 
+---
+
 ### ✔️ Correct ZIP URL (public repos)
 https://codeload.github.com/{owner}/{repo}/zip/{git_ref}
 
-### ✔️ Example  
-https://codeload.github.com/agenticIA256/24h-tremblant/zip/main
+### ✔️ Alternative (recommended for branch or tag refs)
+GET https://api.github.com/repos/{owner}/{repo}/zipball/{git_ref}
 
-### ✔️ ZIP URL (private repos, HITL-approved token required)
-GET https://api.github.com/repos/{owner}/{repo}/zipball/{git_ref}  
-with Authorization: Bearer <token>
+This archive always extracts to:
+```
+owner-repo-<sha>/
+```
+with a full 40‑character SHA.
+
+(No file-by-file reading; downloading a ZIP archive is allowed.)
+
+**Rule:** Prefer **zipball** when `git_ref` is a branch or tag.  
+**Rule:** Prefer **codeload** when `git_ref` is already a full SHA.
+
+**Still forbidden:**  
+- `archive/refs/heads/{ref}.zip`  
+- any `legacy.zip` variant  
+- any ZIP producing a short SHA (7 chars)
 
 ---
 
 ## ⚠️ STRICTLY FORBIDDEN ZIP URL (non-deterministic)
 https://github.com/{owner}/{repo}/archive/refs/heads/{git_ref}.zip
 
-The analyzer **MUST NOT** use archive/refs/heads ZIPs because they **do NOT include the commit SHA in the extracted folder**, which breaks reproducibility and traceability.
+The analyzer **MUST NOT** use this ZIP because it does NOT include the commit SHA in the extracted folder..
 
 **The analyzer MUST:**
-1) **Build the ZIP URL** from github_repo_url + git_ref using the **codeload.github.com** pattern.
+1) **Build the ZIP URL** using either:
+   -  the codeload.github.com pattern (recommended when git_ref is a SHA)
+   -  OR the zipball endpoint (recommended when git_ref is a branch or tag)
 2) **Download** the ZIP using Python (urllib or requests) into:
-    <working_directory>/repo.zip.  
-3) **Extract** the ZIP using Python’s `zipfile` module into:
+    <working_directory>/repo.zip.
+3) **Ensure clean extraction directory (critical)**
+    ```
+     If <working_directory>/repo/ exists → delete or empty it. After extraction, there MUST be exactly ONE directory. If more than one directory exists → fallback="circuit_breaker".
+    ```
+5) **Extract** the ZIP using Python’s `zipfile` module into:
     <working_directory>/repo/.  
-4) **Identify the single root folder** created by GitHub.  This folder MUST follow the pattern:
+6) **Identify the single root folder** created by GitHub.  This folder MUST follow the pattern:
     owner-repo-<sha>/
-5) **Parse the commit SHA from the folder name**:
+7) **Parse the commit SHA from the folder name**:
    - folder_name = extracted_root_folder
    - sha = folder_name.split('-')[-1]
-6) **Validate the SHA**:
+8) **Validate the SHA**:
    - `len(sha) == 40`
    - all characters are hexadecimal (0-9, a-f)
     
@@ -222,7 +242,10 @@ If validation fails →
 → **produce NO report**.
 
 7) **Write into execution_log.json**:
-    repo.clone_method = "zip" repo.git_ref_resolved = "<40-character SHA derived from the ZIP folder>"
+  ```
+  repo.clone_method = "zip"
+  repo.git_ref_resolved = "<40-character SHA derived from the ZIP folder>"
+  ```
 8) **Analyze the full extracted snapshot**: No partial scanning, no sampling, no selective fetching.
 9) **NEVER**:
     - use git clone
