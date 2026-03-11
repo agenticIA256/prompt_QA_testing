@@ -100,20 +100,23 @@ instructions”, etc.).
 - Inputs validated.  
 - Upstream artefacts present.  
 - Naming conventions OK.  
-- RISK  AC  SCENARIO linkage (if applicable).  
+- RISK / AC / SCENARIO linkage (if applicable).  
 - Data & permissions ready.
 - **DoR MUST FAIL** if repo.clone_method ≠ "zip".
-- **DoR MUST FAIL** if repo.git_ref_resolved is not a SHA (e.g., "main" is invalid as resolved ref).
+- **DoR MUST FAIL** if repo.git_ref_resolved is NOT a 40‑character SHA (e.g., "main" is invalid as resolved ref).
 - **DoR MUST FAIL** if <working_directory>/repo.zip is missing after Step 1 or if the extracted root folder cannot be found.
 - **DoR MUST FAIL** if analysis_results.json is missing after Step 2, or if analysis_results.json.commit_sha ≠ repo.git_ref_resolved.
 - **DoR MUST FAIL** if the LLM attempts to read repository files (LLM may read only analysis_results.json and execution_log.json).
+- **DoR MUST FAIL** if the agent invokes any GitHub API calls intended to  inspect repository content (get_file_content, get_directory_content, read_file, get_repository) instead of relying on the ZIP snapshot.
+- **DoR MUST FAIL** if the agent resolves the commit SHA using the GitHub API. The ONLY valid SHA source is the ZIP folder name
 
 **DoD (Definition of Done — post-run)**
 - Outputs written successfully.  
 - Evidence present (execution_log.json, screenshots, bundles).  
 - E2E links ready for the Traceability Binder.  
 - All RAI rules respected.
-- execution_log.json must include tools_called with the **absolute path** to the analyzer script actually executed, and an analysis_results_sha256 (SHA‑256 of the JSON).
+- execution_log.json MUST include tools_called with the **absolute path** to the analyzer script actually executed
+- execution_log.json MUST include analysis_results_sha256(SHA‑256 hash of analysis_results.json.
 
 # 🧭 Workflow / Steps
 ## Step 0 — Preparation & Determinism
@@ -128,26 +131,32 @@ instructions”, etc.).
 * Detect docroot (./, web/, docroot/) and log it.
   
 ## Step 1 - Repository Acquisition (ZIP‑only, no git)
-The analyzer **MUST ALWAYS** download a ZIP snapshot of the repository (NOT git clone).
+
+The analyzer **MUST ALWAYS** download a ZIP snapshot of the repository (**NOT** git clone).
   
-**ZIP URL (public repos):**
- https://codeload.github.com/{owner}/{repo}/zip/{git_ref}
+**ZIP URL (public repos):**  
+https://codeload.github.com/{owner}/{repo}/zip/{git_ref}
 
-**Example:**
- https://codeload.github.com/agenticIA256/24h-tremblant/zip/mai
+**Example:**  
+https://codeload.github.com/agenticIA256/24h-tremblant/zip/main
 
-**ZIP URL (private repos, HITL‑approved token required):**
-GET https://api.github.com/repos/{owner}/{repo}/zipball/{git_ref} with Authorization: Bearer <token>
+**ZIP URL (private repos, HITL‑approved token required):**  
+GET https://api.github.com/repos/{owner}/{repo}/zipball/{git_ref}  
+with Authorization: Bearer <token>
 
 **The analyzer MUST:**
-1) Build the ZIP URL from github_repo_url + git_ref.
-2) Download with Python (urllib or requests) → <working_directory>/repo.zip.
-3) Extract with Python zipfile → <working_directory>/repo/.
-4) Detect the unique root dir owner-repo-<sha>/ and derive the real commit SHA.
-5) Log repo.clone_method="zip" and repo.git_ref_resolved="<sha>" in execution_log.json.
-6) Analyze **the full extracted snapshot** (no sampling/minimal trees).
-7) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results.
-8) If ZIP download/extraction/derivation of SHA fails → set fallback="circuit_breaker" and STOP (no report).
+1) Build the ZIP URL from github_repo_url + git_ref.  
+2) Download with Python (urllib or requests) → <working_directory>/repo.zip.  
+3) Extract with Python zipfile → <working_directory>/repo/.  
+4) Detect the unique root directory **owner-repo-<sha>/** created by GitHub and derive the **real commit SHA** from the folder name.
+5) The analyzer MUST set:
+   * repo.clone_method = "zip
+   * repo.git_ref_resolved = "<40‑character SHA derived from the ZIP folder>
+6) Analyze **the full extracted snapshot** (no sampling, no partial fetch)
+7) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results..
+8) The analyzer MUST NOT call GitHub API to read repository contents (get_file_content, get_directory_content, read_file, get_repository). These calls are STRICTLY FORBIDDEN except for metadata validation
+9) The commit SHA MUST NOT be resolved via GitHub API. SHA MUST come ONLY from the ZIP folder structure.
+10) If ZIP download, extraction, or SHA derivation fails → set fallback="circuit_breaker" and STOP (no report)
 
 ## Step 2 — Static Code Analysis (Python)
 The agent MUST generate and execute: 
