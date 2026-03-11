@@ -174,30 +174,34 @@ This script performs all checks (2.1 → 2.13).
 
 **1) Allowed file extensions**
 
-  ```
-  .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
-  ```
+  - .php
+  - .module
+  - .install
+  - .theme
+  - .inc
+  - .yml
+  - .yaml
+  - .json
+  - .twig
     
 **2) Strict directory exclusions**
 
-  ```
-  .git/
-  vendor/
-  node_modules/
-  core/
-  web/core/
-  docroot/core/
-  sites/*/files/
-  modules/contrib/
-  themes/contrib/
-  profiles/contrib/
-  dist/
-  build/
-  public/build/
-  .cache/
-  .next/
-  .output/
-  ```
+  - .git/
+  - vendor/
+  - node_modules/
+  - core/
+  - web/core/
+  - docroot/core/
+  - sites/*/files/
+  - modules/contrib/
+  - themes/contrib/
+  - profiles/contrib/
+  - dist/
+  - build/
+  - public/build/
+  - .cache/
+  - .next/
+  - .output/
     
   **3) Sorted traversal**
     * dirs[:] = sorted(filtered_dirs)
