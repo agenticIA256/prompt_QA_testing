@@ -164,8 +164,8 @@ instructions”, etc.).
      "ref_resolved": "<sha-or-ref>",
      "sha256": "<computed_hash>"
    }
-  4) Use ONLY this instruction content for all subsequent steps.
-  5) If file not found / empty / hash mismatch → fallback="circuit_breaker" and STOP (no report).
+4) Use ONLY this instruction content for all subsequent steps.
+5) If file not found / empty / hash mismatch → fallback="circuit_breaker" and STOP (no report).
      
 ## Step 0-ter — Preparation & Determinism
 * Force deterministic environment:
