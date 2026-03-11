@@ -72,19 +72,16 @@ instructions”, etc.).
 ## 6. Compliance & Traceability
 * ALWAYS write an execution_log.json containing:
 ```json 
-{
+ {
   "run_id": "<timestamp or uuid>",
   "agent": "<Agent Name>",
   "purpose": "<Purpose>",
-  "input": { /* sanitized input payload */ },
-  "steps": [ /* ordered step logs */ ],
-  "tools_called": [ /* e.g., "python /abs/path/.../analyze_drupal_repo.py" */ ],
-  "errors": [ /* messages or empty array */ ],
+  "input": {...},
+  "steps": [...],
+  "tools_called": [...],
+  "errors": [...],
   "fallback": "<none|circuit_breaker|abort>",
-  "sci": {
-    "llm_calls": <n>,
-    "duration_ms": <n>
-  },
+  "sci": {"llm_calls": <n>, "duration_ms": <n>},
   "repo": {
     "remote_url": "<url>",
     "clone_method": "zip",
@@ -92,23 +89,8 @@ instructions”, etc.).
     "git_ref_resolved": "<sha>",
     "docroot_detected": "<./|web/|docroot/>"
   },
-  "outputs": {
-    "paths_to_all_written_files": [
-      "./data/runs/compliance/<timestamp>/analysis_results.json",
-      "./data/runs/compliance/<timestamp>/execution_log.json",
-      "./data/runs/compliance/<timestamp>/drupal11_audit_report.md",
-      "./data/runs/compliance/<timestamp>/hitl_status.json"
-    ]
-  },
-  "compliance_score": <0..100>,
-  "analysis_results_sha256": "<sha256_of_analysis_results_json>",
-  "instructions": {
-    "source_repo": "agenticIA256/prompt_QA_testing",
-    "path": "prompts/DevDrupal11ComplianceAuditor_Instructions.md",
-    "ref_requested": "<instruction_ref_input>",
-    "ref_resolved": "<sha-or-ref>",
-    "sha256": "<computed_hash>"
-  }
+  "outputs": {"paths_to_all_written_files": ["..."]},
+  "compliance_score": <0..100>
 }
 ```
 * repo.clone_method MUST equal "zip", and repo.git_ref_resolved MUST be a SHA derived from the extracted ZIP folder
@@ -127,10 +109,6 @@ instructions”, etc.).
 - **DoR MUST FAIL** if the LLM attempts to read repository files (LLM may read only analysis_results.json and execution_log.json).
 - **DoR MUST FAIL** if the agent invokes any GitHub API calls intended to  inspect repository content (get_file_content, get_directory_content, read_file, get_repository) instead of relying on the ZIP snapshot.
 - **DoR MUST FAIL** if the agent resolves the commit SHA using the GitHub API. The ONLY valid SHA source is the ZIP folder name
-- **DoR MUST FAIL** if the agent attempts to read ANY other instruction filethan `prompts/DevDrupal11ComplianceAuditor_Instructions.md` in `agenticIA256/prompt_QA_testing@<instruction_ref>`
-- **DoR MUST FAIL** if `instructions.sha256` is missing in `execution_log.json` or if the fetched file is empty.
-- **DoR MUST FAIL** if the agent calls `get_file_content`, `get_directory_content`, `read_file`, or `get_repository` to read any repository content EXCEPT the single allowed instruction file above.
-- **DoR MUST FAIL** if the agent resolves the instruction ref via API in a way that contradicts the requested `<instruction_ref>`; pin to the requested ref (SHA recommended).
 
 **DoD (Definition of Done — post-run)**
 - Outputs written successfully.  
@@ -141,33 +119,7 @@ instructions”, etc.).
 - execution_log.json MUST include analysis_results_sha256(SHA‑256 hash of analysis_results.json.
 
 # 🧭 Workflow / Steps
-## Step 0‑bis — Instruction Acquisition (single file, GitHub)
-
-**Allowed GitHub read**: the agent MAY call `github.get_file_content` **ONLY** for:
-- repository: https://github.com/agenticIA256/prompt_QA_testing
-- path: prompts/DevDrupal11ComplianceAuditor_Instructions.md
-- ref: <instruction_ref> (branch/tag/SHA) — **SHA strongly recommended**
-
-**Forbidden**:
-- Any other call to get_file_content / get_directory_content / read_file / get_repository
-  for the purpose of reading instructions or repository code.
-
-**The agent MUST**:
-1) Fetch exactly that file at `<instruction_ref>`.
-2) Compute SHA‑256 of the file content → `instructions_sha256`.
-3) Log in `execution_log.json`:
-   ```json
-   "instructions": {
-     "source_repo": "agenticIA256/prompt_QA_testing",
-     "path": "prompts/DevDrupal11ComplianceAuditor_Instructions.md",
-     "ref_requested": "<instruction_ref_input>",
-     "ref_resolved": "<sha-or-ref>",
-     "sha256": "<computed_hash>"
-   }
-4) Use ONLY this instruction content for all subsequent steps.
-5) If file not found / empty / hash mismatch → fallback="circuit_breaker" and STOP (no report).
-     
-## Step 0-ter — Preparation & Determinism
+## Step 0 — Preparation & Determinism
 * Force deterministic environment:
   * PYTHONHASHSEED=0
   * UTF‑8 encoding
@@ -198,10 +150,10 @@ with Authorization: Bearer <token>
 3) Extract with Python zipfile → <working_directory>/repo/.  
 4) Detect the unique root directory **owner-repo-<sha>/** created by GitHub and derive the **real commit SHA** from the folder name.
 5) The analyzer MUST set:
-   * repo.clone_method = "zip"
-   * repo.git_ref_resolved = "<40‑character SHA derived from the ZIP folder>"
+   * repo.clone_method = "zip
+   * repo.git_ref_resolved = "<40‑character SHA derived from the ZIP folder>
 6) Analyze **the full extracted snapshot** (no sampling, no partial fetch)
-7) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results.
+7) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results..
 8) The analyzer MUST NOT call GitHub API to read repository contents (get_file_content, get_directory_content, read_file, get_repository). These calls are STRICTLY FORBIDDEN except for metadata validation
 9) The commit SHA MUST NOT be resolved via GitHub API. SHA MUST come ONLY from the ZIP folder structure.
 10) If ZIP download, extraction, or SHA derivation fails → set fallback="circuit_breaker" and STOP (no report)
