@@ -72,8 +72,7 @@
    - Prefer caching, batching, prompt-shortening, and reuse of artefacts.
 6. Compliance & Traceability
    - ALWAYS write an execution_log.json containing:
-   ```json
-    {
+       {
   "run_id": "<timestamp-or-uuid>",
   "agent": "RaiJiraXrayPublisher",
   "purpose": "Publish test cases to Jira Xray",
@@ -88,7 +87,6 @@
   "errors": [/* sanitized summaries, if any */],
   "fallback": "<none|circuit_breaker
 }
-   ```
    - Provide a ready-to-paste JIRA ticket body block inside the Markdown bundle (if applicable).
    - Ensure the bundle includes a concise DoR/DoD checklist outcome and a link list to every receipt/evidence artefact.
 
