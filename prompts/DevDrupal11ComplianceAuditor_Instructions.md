@@ -156,9 +156,23 @@ then the analyzer MUST FAIL immediately with:
 ```
 fallback = "circuit_breaker" STOP (no report)
 ```
-Short SHAs (7 chars) and branch‑style folder names (`repo-main/`) are NOT accepted.  
-Only a ZIPBALL folder containing a **full 40‑hex SHA** is valid.
+Short SHAs (7 chars) in the extracted ZIPBALL folder name are acceptable **only if**
+the analyzer deterministically recovers the **full 40‑hex SHA** from the **same zipball HTTP response**
+(no GitHub content API calls).
+If the full SHA cannot be recovered → fallback="circuit_breaker".
 
+**ZIPBALL SHA derivation (no API)**
+If the extracted ZIPBALL folder ends with a 7‑char short SHA, the analyzer MUST derive the
+full 40‑hex commit SHA from the **same HTTP transaction** using the first available source:
+
+1) the final **redirected URL** (Location) of the zipball request, if it ends with a 40‑hex SHA;
+2) the **Content-Disposition filename** of the zipball response, if it contains a 40‑hex SHA;
+3) any **X- headers** provided by the zipball response that carry a 40‑hex commit id.
+
+If none of these yields a 40‑hex SHA → `fallback = "circuit_breaker"` and **STOP** (no report).
+
+The analyzer MUST log the `repo.git_ref_resolved` and the **source** used:
+`"sha_source": "zipball.folder" | "zipball.redirect_url" | "zipball.content_disposition" | "zipball.header"`.
 
 **ZIP URL (public repos):**  
 https://codeload.github.com/{owner}/{repo}/zip/{git_ref}
