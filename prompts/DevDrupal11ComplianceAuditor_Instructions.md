@@ -560,14 +560,17 @@ LLM **must not** generate new findings or modify score.
 
 ```python
 import os
+import sys
 import json
 from pathlib import Path
-import sys
 
-
-# 0) Locate the current run directory safely (no <timestamp> hard-coded).
-#    Assumption: this snippet runs from the project root where ./data/runs/compliance/ lives.
+# 0) Locate the current run directory safely (no hard-coded <timestamp>)
+#    Assumption: snippet runs from the project root where ./data/runs/compliance exists.
 base_dir = Path("./data/runs/compliance").resolve()
+
+if not base_dir.exists():
+    print("ERROR: ./data/runs/compliance not found", file=sys.stderr)
+    sys.exit(1)
 
 # Pick the most recent subfolder that contains analysis_results.json
 candidates = sorted(
@@ -583,7 +586,7 @@ for p in candidates:
         break
 
 if run_dir is None:
-    print("ERROR: analysis_results.json not found in any run directory under ./data/runs/compliance/", file=sys.stderr)
+    print("ERROR: analysis_results.json not found in any run directory", file=sys.stderr)
     sys.exit(1)
 
 analysis_path = run_dir / "analysis_results.json"
@@ -593,7 +596,7 @@ elog_path = run_dir / "execution_log.json"
 with analysis_path.open("r", encoding="utf-8") as f:
     ar = json.load(f)
 
-# 2) Severity weights (prevents NameError and standardizes scoring)
+# 2) Define severity weights (ALWAYS define inside this snippet)
 severity_weights = {
     "critical": 5,
     "high": 3,
@@ -602,19 +605,20 @@ severity_weights = {
     "info": 0
 }
 
-# 3) Compute score (robust against missing/unknown severities
+# 3) Compute score (robust to missing/unknown severities)
 findings = ar.get("findings", []) or []
 total_findings = len(findings)
 observed_points = sum(
     severity_weights.get((f.get("severity") or "").strip().lower(), 0)
     for f in findings
 )
+
 if total_findings == 0:
     compliance_score = 100.0
 else:
     compliance_score = 100.0 * (1.0 - (observed_points / (total_findings * 5.0)))
 
-# 4) Update execution_log.json (create if missing
+# 4) Update execution_log.json (create if missing)
 elog = {}
 if elog_path.exists():
     try:
@@ -633,7 +637,7 @@ with elog_path.open("w", encoding="utf-8") as f:
     json.dump(elog, f, ensure_ascii=False, indent=2, sort_keys=True)
 
 print(f"[Step 3] Compliance score = {elog['compliance_score']}")
-print(f"[Step 3] Updated: {elog_path}")
+print(f"[Step 3] Updated execution log: {elog_path}")
 ```
 
 ## 🧑‍⚖️ Step 4 – HITL
