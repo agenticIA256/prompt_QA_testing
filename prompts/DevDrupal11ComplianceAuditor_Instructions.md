@@ -558,35 +558,83 @@ Computed **strictly** from analysis_results.json.
 
 LLM **must not** generate new findings or modify score.
 
-### 3.1 — Severity weights
 ```python
-severity_weights = {
-  "critical": 5,
-  "high": 3,
-  "medium": 2,
-  "low": 1,
-  "info": 0
-}
-total_findings = len(analysis_results["findings"])
-```
+import os
+import json
+from pathlib import Path
+import sys
 
-### 3.2 — Observed points
-```python
-observed_points = sum(
-  severity_weights.get(f["severity"].lower(), 0)
-  for f in analysis_results["findings"]
+
+# 0) Locate the current run directory safely (no <timestamp> hard-coded).
+#    Assumption: this snippet runs from the project root where ./data/runs/compliance/ lives.
+base_dir = Path("./data/runs/compliance").resolve()
+
+# Pick the most recent subfolder that contains analysis_results.json
+candidates = sorted(
+    (p for p in base_dir.iterdir() if p.is_dir()),
+    key=lambda p: p.stat().st_mtime,
+    reverse=True
 )
-```
 
-### 3.3  —  Score
-```python
+run_dir = None
+for p in candidates:
+    if (p / "analysis_results.json").exists():
+        run_dir = p
+        break
+
+if run_dir is None:
+    print("ERROR: analysis_results.json not found in any run directory under ./data/runs/compliance/", file=sys.stderr)
+    sys.exit(1)
+
+analysis_path = run_dir / "analysis_results.json"
+elog_path = run_dir / "execution_log.json"
+
+# 1) Load analysis results
+with analysis_path.open("r", encoding="utf-8") as f:
+    ar = json.load(f)
+
+# 2) Severity weights (prevents NameError and standardizes scoring)
+severity_weights = {
+    "critical": 5,
+    "high": 3,
+    "medium": 2,
+    "low": 1,
+    "info": 0
+}
+
+# 3) Compute score (robust against missing/unknown severities
+findings = ar.get("findings", []) or []
+total_findings = len(findings)
+observed_points = sum(
+    severity_weights.get((f.get("severity") or "").strip().lower(), 0)
+    for f in findings
+)
 if total_findings == 0:
-    compliance_score = 100
+    compliance_score = 100.0
 else:
-    maximum_possible_points = total_findings * 5
-    compliance_score = 100 * (1 - (observed_points / maximum_possible_points))
+    compliance_score = 100.0 * (1.0 - (observed_points / (total_findings * 5.0)))
+
+# 4) Update execution_log.json (create if missing
+elog = {}
+if elog_path.exists():
+    try:
+        with elog_path.open("r", encoding="utf-8") as f:
+            elog = json.load(f)
+    except json.JSONDecodeError:
+        elog = {}
+
+elog["compliance_score"] = round(compliance_score, 2)
+
+# Optional: mirror analysis_results_sha256 into the execution log if present
+if "analysis_results_sha256" in ar:
+    elog["analysis_results_sha256"] = ar["analysis_results_sha256"]
+
+with elog_path.open("w", encoding="utf-8") as f:
+    json.dump(elog, f, ensure_ascii=False, indent=2, sort_keys=True)
+
+print(f"[Step 3] Compliance score = {elog['compliance_score']}")
+print(f"[Step 3] Updated: {elog_path}")
 ```
-Write compliance_score into execution_log.json.
 
 ## 🧑‍⚖️ Step 4 – HITL
 ### 4.1 — Create hitl_status.json ###
