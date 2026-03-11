@@ -132,7 +132,7 @@ instructions”, etc.).
 - **DoR MUST FAIL** if the agent calls `get_file_content`, `get_directory_content`, `read_file`, or `get_repository` to read any repository content EXCEPT the single allowed instruction file above.
 - **DoR MUST FAIL** if the agent resolves the instruction ref via API in a way that contradicts the requested `<instruction_ref>`; pin to the requested ref (SHA recommended).
 - **DoR MUST FAIL** if any GitHub API call is used to resolve commit SHA. Allowed = ZIP folder only. Not allowed = API-based SHA resolution.
-
+- **DoR MUST FAIL** if the extracted root folder ends with a short SHA (7 characters). Only full 40‑character SHAs are acceptable.
 
 **DoD (Definition of Done — post-run)**
 - Outputs written successfully.  
@@ -233,17 +233,23 @@ The analyzer **MUST NOT** use this ZIP because it does NOT include the commit SH
    - folder_name = extracted_root_folder
    - sha = folder_name.split('-')[-1]
 7) **Validate the SHA**:
-  ```
-   `len(sha) == 40`
-   all characters are hexadecimal (0-9, a-f)
-  ```   
-  If validation fails:
-  **STOP immediately** →  
-  ```
-  fallback = "circuit_breaker"
-  STOP IMMEDIATELY
-  ```
-8) **Write into execution_log.json**:
+    ```
+     `len(sha) == 40`
+     all characters are hexadecimal (0-9, a-f)
+    ```   
+    If validation fails:
+    **STOP immediately** →  
+    ```
+    fallback = "circuit_breaker"
+    STOP IMMEDIATELY
+    ```
+    **Additional SHA validation (short SHA protection)**
+    ```     
+    The analyzer MUST fail if the extracted folder ends with a short SHA  
+    (7 characters, e.g. 7-character abbreviated commit hash).  
+    Short SHAs are NOT allowed. Only full 40‑character SHAs are valid.
+    ```   
+9) **Write into execution_log.json**:
   ```
   repo.clone_method = "zip"
   repo.git_ref_resolved = "<40-character SHA derived from the ZIP folder>"
@@ -262,11 +268,11 @@ The analyzer **MUST NOT** use this ZIP because it does NOT include the commit SH
 12) **The commit SHA MUST NOT be resolved via GitHub API.** It MUST come **only** from the folder name inside the extracted ZIP.
 13) **The analyzer MUST FAIL DoR** if it attempts to resolve the commit SHA via GitHub API (for example by calling get_repository or get_commit). The ONLY valid source for the SHA is the extracted ZIP folder name.
 14) If ZIP download, extraction, or SHA derivation fails →
- Set:
- ```
- fallback = "circuit_breaker"
- ```
- And **STOP immediately** (no report).
+   Set:
+   ```
+   fallback = "circuit_breaker"
+   ```
+   And **STOP immediately** (no report).
 
 
 ## Step 2 — Static Code Analysis (Python)
