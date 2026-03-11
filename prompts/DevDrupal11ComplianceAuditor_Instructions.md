@@ -513,7 +513,7 @@ The analyzer script MUST implement all of the following deterministic behaviors:
 ✔️ Extended exclusions (vendor/, core/, node_modules/, contrib/, dist/, build/, etc.)  
 ✔️ UTF‑8 safe reading of all files (encoding="utf-8", errors="replace")  
 ✔️ Deduplication of findings using (analysis, file, line, code_snippet)  
-✔️ Final sorted JSON by (file, line, analysis, type)
+✔️ Final sorted JSON by (file, line, analysis, type)   
 ✔️ Repo‑relative paths with / separators  
 ✔️ No external API calls inside Python (no GitHub API, no web requests)  
 ✔️ Deterministic output guarantees (JSON with sort_keys=True, no randomness, no timestamps affecting findings)
