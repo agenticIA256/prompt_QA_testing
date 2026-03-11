@@ -120,8 +120,8 @@ DoD (Definition of Done — post-run)
  Si xray_mode=Automated → présence d’un bloc bdd (ou de quoi générer un .feature).
 * Sanitize (paths/URLs/JSON) + redact PII ; vérifier xray_mode ∈ {Manual, Automated} (insensible à la casse).
 * Charger les secrets via config (non loggués).
-Jira : PAT ; si token scopé, les appels passent par https://api.atlassian.com/ex/jira/{cloudId} ; sinon https://<tenant>.atlassian.net. [docs.runway.team], [support.stoplight.io]
-Xray : client_id / client_secret (API Keys) pour REST v2 & GraphQL. [easesoluti...assian.net]
+Jira : PAT ; si token scopé, les appels passent par https://api.atlassian.com/ex/jira/{cloudId} ; sinon https://<tenant>.atlassian.net.
+Xray : client_id / client_secret (API Keys) pour REST v2 & GraphQL. 
 
 **2) Transform & Map (Xray)**
  * Commun
@@ -143,29 +143,29 @@ dry_run=false → exécuter en batch (20), retries exponentiels (3) + jitter, re
 
 **3.A — Manual (Test + Steps + Pre‑conditions)**
 * Créer les Pre‑Conditions (si fournies)
-* Pour chaque entrée precondition, POST Jira REST v3 …/rest/api/3/issue avec issuetype={name:"Pre-Condition"} + summary + description (ADF) ; consigner la clé (<PROJ>-xxx). Les Pre‑Conditions sont des issues Jira comme les Tests. [devstringx.com]
+* Pour chaque entrée precondition, POST Jira REST v3 …/rest/api/3/issue avec issuetype={name:"Pre-Condition"} + summary + description (ADF) ; consigner la clé (<PROJ>-xxx). Les Pre‑Conditions sont des issues Jira comme les Tests.
 * Créer le Test (Jira)
-* POST Jira REST v3 …/rest/api/3/issue avec issuetype={name:"Test"}, summary, labels, description (ADF) ; récupérer issueKey. Les contenus riches doivent être en ADF en v3. [youtube.com], [youtube.com]
+* POST Jira REST v3 …/rest/api/3/issue avec issuetype={name:"Test"}, summary, labels, description (ADF) ; récupérer issueKey. Les contenus riches doivent être en ADF en v3. 
 * Relier les Pre‑Conditions au Test (Xray)
-* Xray GraphQL : créer les liens Pre‑Condition → Test (relation gérée côté Xray GraphQL). [devstringx.com]
+* Xray GraphQL : créer les liens Pre‑Condition → Test (relation gérée côté Xray GraphQL). 
 * Créer les Steps Xray (action / data / expected)
-* Auth Xray → POST /api/v2/authenticate pour obtenir un Bearer. [easesoluti...assian.net]
+* Auth Xray → POST /api/v2/authenticate pour obtenir un Bearer. 
 * GraphQL Xray : créer/mettre à jour les steps du Test (un appel par lot ou itératif) avec action, data, result (= expected_result).
-* Sur Xray Cloud, le CRUD des steps passe par GraphQL, pas par des customfield_*. [devstringx.com], [docs.getxray.app]
+* Sur Xray Cloud, le CRUD des steps passe par GraphQL, pas par des customfield_*. 
 * Vérifier via une requête GraphQL de lecture que le nombre de steps = source et que result n’est pas vide.
 * (Option) Lier Test Plans / Test Sets
-* Créer/associer via Jira (création des issues), puis lier via Xray GraphQL (relations Xray). [devstringx.com]
+* Créer/associer via Jira (création des issues), puis lier via Xray GraphQL (relations Xray). 
 
 **3.B — Automated**
 * Cucumber :
-POST https://xray.cloud.getxray.app/api/v2/import/feature?projectKey=<PROJ> avec le .feature (multipart) → Xray crée/MAJ les Tests Cucumber (tags → labels, mapping scenario → test). [docs.getxray.app]
+POST https://xray.cloud.getxray.app/api/v2/import/feature?projectKey=<PROJ> avec le .feature (multipart) → Xray crée/MAJ les Tests Cucumber (tags → labels, mapping scenario → test).
 
 * Generic :
-POST Jira REST v3 pour créer le Test ; stocker automation.* pour la traçabilité ; (imports de résultats à part si nécessaire). [youtube.com]
+POST Jira REST v3 pour créer le Test ; stocker automation.* pour la traçabilité ; (imports de résultats à part si nécessaire). 
 
 **4) Post‑Publish Linking & Evidence**
 * Récupérer issueKey/URLs créés (Tests, Pre‑Conditions, Plans/Sets/Executions).
-* Couverture (facultatif) : s’assurer que le lien Jira Name=Test / Outward=tests / Inward=is tested by existe si tu relies à des exigences (utile à l’import Cucumber @KEY-123). [developer....assian.com]
+* Couverture (facultatif) : s’assurer que le lien Jira Name=Test / Outward=tests / Inward=is tested by existe si tu relies à des exigences (utile à l’import Cucumber @KEY-123). 
 * Agréger payloads & réponses (abrégées, sans secrets) dans jira_publisher_bundle.md.
 
 ** 5) Write Artefacts (./data/runs/publish_xray/<timestamp>/)**
