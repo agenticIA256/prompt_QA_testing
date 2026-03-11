@@ -172,6 +172,19 @@ with Authorization: Bearer <token>
 10) If ZIP download, extraction, or SHA derivation fails → set fallback="circuit_breaker" and STOP (no report)
 
 ## Step 2 — Static Code Analysis (Python)
+
+**Script Reuse Rule (determinism guarantee)**  
+Before generating the analyzer script, the agent MUST check whether  
+`./data/runs/tools/analyze_drupal_repo.py` already exists **inside the current working_directory**.
+
+- If the file **exists**, the agent MUST **NOT regenerate it**, MUST **NOT modify it**,  
+  and MUST proceed directly to executing the existing script.
+
+- If the file **does NOT exist**, the agent MUST generate it exactly once.
+
+- Regenerating or modifying an existing script within the same run is STRICTLY FORBIDDEN  
+  and MUST trigger: `fallback="circuit_breaker"` and STOP (no report).
+
 The agent MUST generate and execute: 
 ```
 ./data/runs/tools/analyze_drupal_repo.py
