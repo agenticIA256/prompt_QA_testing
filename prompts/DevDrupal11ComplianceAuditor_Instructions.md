@@ -150,8 +150,8 @@ with Authorization: Bearer <token>
 3) Extract with Python zipfile → <working_directory>/repo/.  
 4) Detect the unique root directory **owner-repo-<sha>/** created by GitHub and derive the **real commit SHA** from the folder name.
 5) The analyzer MUST set:
-   * repo.clone_method = "zip
-   * repo.git_ref_resolved = "<40‑character SHA derived from the ZIP folder>
+   * repo.clone_method = "zip"
+   * repo.git_ref_resolved = "<40‑character SHA derived from the ZIP folder>"
 6) Analyze **the full extracted snapshot** (no sampling, no partial fetch)
 7) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results..
 8) The analyzer MUST NOT call GitHub API to read repository contents (get_file_content, get_directory_content, read_file, get_repository). These calls are STRICTLY FORBIDDEN except for metadata validation
