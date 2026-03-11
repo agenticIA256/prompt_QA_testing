@@ -127,18 +127,48 @@ instructions”, etc.).
 * **DO NOT** include this path in findings (always use repo‑relative paths).
 * Detect docroot (./, web/, docroot/) and log it.
   
-## Step 1 - Repository Acquisition  
-* Clone github_repo_url into working_directory/repo.
-* If git_ref provided → checkout exact revision (SHA/tag/branch).
-* Log git_ref_resolved as SHA.
-* **Do not run** npm/composer build steps.
+## Step 1 - Repository Acquisition (ZIP‑only, no git)
+The analyzer **MUST ALWAYS** download a ZIP snapshot of the repository (NOT git clone).
+  
+**ZIP URL (public repos):**
+ https://codeload.github.com/{owner}/{repo}/zip/{git_ref}
+
+**Example:**
+ https://codeload.github.com/agenticIA256/24h-tremblant/zip/mai
+
+**ZIP URL (private repos, HITL‑approved token required):**
+GET https://api.github.com/repos/{owner}/{repo}/zipball/{git_ref} with Authorization: Bearer <token>
+
+**The analyzer MUST:**
+1) Build the ZIP URL from github_repo_url + git_ref.
+2) Download with Python (urllib or requests) → <working_directory>/repo.zip.
+3) Extract with Python zipfile → <working_directory>/repo/.
+4) Detect the unique root dir owner-repo-<sha>/ and derive the real commit SHA.
+5) Log repo.clone_method="zip" and repo.git_ref_resolved="<sha>" in execution_log.json.
+6) Analyze **the full extracted snapshot** (no sampling/minimal trees).
+7) NEVER use git clone. NEVER fetch individual files. NEVER reuse previous run results.
+8) If ZIP download/extraction/derivation of SHA fails → set fallback="circuit_breaker" and STOP (no report).
 
 ## Step 2 — Static Code Analysis (Python)
-The agent MUST generate and execute the Python script at: 
+The agent MUST generate and execute: 
 ```
 ./data/runs/tools/analyze_drupal_repo.py
 ```
+
+Create parent folder first:
+```
+os.makedirs("./data/runs/tools", exist_ok=True)
+```
+
 This script performs all checks (2.1 → 2.13).
+
+**HARD COMPLIANCE CONSTRAINTS (MANDATORY)**
+* The agent MUST generate exactly **one** Python file: ./data/runs/tools/analyze_drupal_repo.py.
+* The agent MUST NOT generate **any** other Python file under ./data/runs/. If any exists → ABORT with fallback=circuit_breaker.
+* The analyzer MUST NOT reuse analysis_results.json from previous runs.
+* The analyzer MUST NOT scan a “representative subset”; it MUST scan the full extracted snapshot.
+* The analyzer MUST log the executed **absolute path** in execution_log.json → tools_called.
+* If the analyzer fails to download/extract ZIP or fails to run → ABORT (fallback=circuit_breaker) and DO NOT produce a report.
 
 ### 2.A — Deterministic Requirements
 
@@ -193,7 +223,10 @@ analysis_results.json
 ```json
 {
   "repository": "<sanitized github_repo_url>",
+  "commit_sha": "<sha-from-zip-folder>",
   "scan_date": "<ISO8601>",
+  "tree_file_count": <n>,
+  "tree_total_bytes": <n>,
   "findings": [
     {
       "analysis": "2.x",
@@ -207,7 +240,12 @@ analysis_results.json
   ]
 }
 ```
-LLM may read only analysis_results.json + execution_log.json.
+The script MUST compute and emit analysis_results_sha256 (SHA‑256 hash) to be logged in execution_log.json
+
+**LLM Restrictions**
+The LLM may read only:
+* analysis_results.json
+* execution_log.json.
   
 ### 🔍 2.1 Deprecated API Detection (Drupal 11)
 Detect all deprecated or removed APIs including Drupal 11 removals.
@@ -410,11 +448,6 @@ else:
 ```
 Write compliance_score into execution_log.json.
 
-### 3.4 — Reporting Constraints
-* All findings must come directly from the JSON.
-* No invented code samples.
-* LLM may format/group only for readability.
-
 ## 🧑‍⚖️ Step 4 – HITL
 ### 4.1 — Create hitl_status.json ###
 ```json
@@ -431,6 +464,11 @@ Pause until human approval.
 ### 4.2 — If approved ###
 * Upload drupal11_audit_report.md to Confluence
 * Update execution_log.json with Confluence URL + timestamp
+
+## Step 5 — Reporting Constraints
+* The report MUST reflect analysis_results.json and the compliance score from execution_log.json ONLY.
+* The report MUST NOT include editorial “positive aspects”, invented code snippets, invented line numbers, or conclusions not present in analysis_results.json.
+* Grouping/formatting for readability is allowed; no inference or extrapolation.
 
 # 📦 Outputs / Artifacts
 Stored in:
@@ -455,21 +493,39 @@ Full metadata + compliance score.
 * **hitl_status.json**
 HITL state.
 
-# 🛠️ Tooling
-Static analyzer script must be generated as:
+# 🛠️ Tooling  (strict)
+The static analyzer script MUST be generated at:
 ```
 ./data/runs/tools/analyze_drupal_repo.py
 ```
 
-Must implement:
-* Sorted traversal
-* Extended exclusions
-* UTF‑8 safe reading
-* Deduplication
-* Final sorted JSON
-* Repo‑relative paths
-* No external API calls
-* Deterministic output guarantees
+The agent MUST create its parent folder before writing and log the absolute path executed in tools_called.
+
+If any other Python file appears under ./data/runs/, the run MUST abort with fallback=circuit_breaker and produce no report.
+
+--
+
+🔥 MUST IMPLEMENT (Python analyzer requirements)
+
+The analyzer script MUST implement all of the following deterministic behaviors:
+
+✔️ Sorted traversal of directories and files (dirs[:] = sorted(...), files = sorted(...))  
+✔️ Extended exclusions (vendor/, core/, node_modules/, contrib/, dist/, build/, etc.)  
+✔️ UTF‑8 safe reading of all files (encoding="utf-8", errors="replace")  
+✔️ Deduplication of findings using (analysis, file, line, code_snippet)  
+✔️ Final sorted JSON by (file, line, analysis, type)
+✔️ Repo‑relative paths with / separators  
+✔️ No external API calls inside Python (no GitHub API, no web requests)  
+✔️ Deterministic output guarantees (JSON with sort_keys=True, no randomness, no timestamps affecting findings)
+
+These requirements ensure:
+
+- Deterministic results  
+- Full reproducibility  
+- No non‑RAI behaviours  
+- Proper compliance with your Hard Constraints  
+
+
 
 # 🔙 Return
 Return the absolute run directory:
