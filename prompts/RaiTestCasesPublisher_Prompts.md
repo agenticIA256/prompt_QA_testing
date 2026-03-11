@@ -1,5 +1,5 @@
-**Inputs**: 
- ```json
+# Inputs: 
+ ``` json
 {
   "test_cases_path": string,
   "jira_base_url": string,
@@ -20,11 +20,12 @@
       }
     }
   }
-}```
+}
+```
 
-**Use ./data as the working directory**.
+* Use ./data as the working directory.
 
-**PURPOSE & SCOPE (Governance)**
+# PURPOSE & SCOPE (Governance)
 - Purpose: Publier de manière fiable et traçable les cas de test issus de l’agent RaiTestCaseGenerator vers **Jira Xray**, en appliquant RAI+QASH (logs structurés, bundle Markdown, traçabilité RISK↔AC↔SCEN↔CASE) et en respectant les pauses HITL (DoR/DoD).
 - Scope boundaries:
   * NO actions outside scope.
