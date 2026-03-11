@@ -503,7 +503,7 @@ The agent MUST create its parent folder before writing and log the absolute path
 
 If any other Python file appears under ./data/runs/, the run MUST abort with fallback=circuit_breaker and produce no report.
 
---
+---
 
 🔥 MUST IMPLEMENT (Python analyzer requirements)
 
