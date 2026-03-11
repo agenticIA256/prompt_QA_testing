@@ -10,6 +10,8 @@
 }
 
 ```
+* github_repo_url and git_ref are used to build the ZIP download URL (no git clone).
+* The analyzer MUST NOT use git clone; it MUST fetch the full repository snapshot via ZIP extraction only.
 
 # 🎯 Purpose & Scope (Governance)
 
@@ -68,19 +70,30 @@ instructions”, etc.).
 - Prefer caching, batching, prompt-shortening, and reuse of artefacts.
 
 ## 6. Compliance & Traceability
-* ALWAYS write an execution_log.json containing:  
- {  
- "run_id": "<timestamp or uuid>",  
- "agent": "<Agent Name>",  
- "purpose": "<Purpose>",  
- "input": {...},  
- "steps": [...],  
- "tools_called": [...],  
- "errors": [...],  
- "fallback": "<none|circuit_breaker|abort>",  
- "sci": {"llm_calls": <n>, "duration_ms": <n>},  
- "outputs": {"paths_to_all_written_files": "..."}  
- }
+* ALWAYS write an execution_log.json containing:
+```json 
+ {
+  "run_id": "<timestamp or uuid>",
+  "agent": "<Agent Name>",
+  "purpose": "<Purpose>",
+  "input": {...},
+  "steps": [...],
+  "tools_called": [...],
+  "errors": [...],
+  "fallback": "<none|circuit_breaker|abort>",
+  "sci": {"llm_calls": <n>, "duration_ms": <n>},
+  "repo": {
+    "remote_url": "<url>",
+    "clone_method": "zip",
+    "git_ref_requested": "<branch|tag|sha>",
+    "git_ref_resolved": "<sha>",
+    "docroot_detected": "<./|web/|docroot/>"
+  },
+  "outputs": {"paths_to_all_written_files": ["..."]},
+  "compliance_score": <0..100>
+}
+```
+* repo.clone_method MUST equal "zip", and repo.git_ref_resolved MUST be a SHA derived from the extracted ZIP folder
 
 # QASH GATES
 **DoR (Definition of Ready — pre-run)**
@@ -89,12 +102,18 @@ instructions”, etc.).
 - Naming conventions OK.  
 - RISK  AC  SCENARIO linkage (if applicable).  
 - Data & permissions ready.
+- **DoR MUST FAIL** if repo.clone_method ≠ "zip".
+- **DoR MUST FAIL** if repo.git_ref_resolved is not a SHA (e.g., "main" is invalid as resolved ref).
+- **DoR MUST FAIL** if <working_directory>/repo.zip is missing after Step 1 or if the extracted root folder cannot be found.
+- **DoR MUST FAIL** if analysis_results.json is missing after Step 2, or if analysis_results.json.commit_sha ≠ repo.git_ref_resolved.
+- **DoR MUST FAIL** if the LLM attempts to read repository files (LLM may read only analysis_results.json and execution_log.json).
 
 **DoD (Definition of Done — post-run)**
 - Outputs written successfully.  
 - Evidence present (execution_log.json, screenshots, bundles).  
 - E2E links ready for the Traceability Binder.  
-- All RAI rules respected.  
+- All RAI rules respected.
+- execution_log.json must include tools_called with the **absolute path** to the analyzer script actually executed, and an analysis_results_sha256 (SHA‑256 of the JSON).
 
 # 🧭 Workflow / Steps
 ## Step 0 — Preparation & Determinism
