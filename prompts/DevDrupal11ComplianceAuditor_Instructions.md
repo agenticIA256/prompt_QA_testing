@@ -175,28 +175,28 @@ This script performs all checks (2.1 → 2.13).
 **1) Allowed file extensions**
 
     ```
-    .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
+      .php, .module, .install, .theme, .inc, .yml, .yaml, .json, .twig
     ```
     
 **2) Strict directory exclusions**
 
     ```
-    .git/
-    vendor/
-    node_modules/
-    core/
-    web/core/
-    docroot/core/
-    sites/*/files/
-    modules/contrib/
-    themes/contrib/
-    profiles/contrib/
-    dist/
-    build/
-    public/build/
-    .cache/
-    .next/
-    .output/
+      .git/
+      vendor/
+      node_modules/
+      core/
+      web/core/
+      docroot/core/
+      sites/*/files/
+      modules/contrib/
+      themes/contrib/
+      profiles/contrib/
+      dist/
+      build/
+      public/build/
+      .cache/
+      .next/
+      .output/
     ```
     
   **3) Sorted traversal**
@@ -216,31 +216,37 @@ This script performs all checks (2.1 → 2.13).
   **No randomness, no external calls, no LLM in script**
 
 ### 2.B — Output Format
-Generate:
+The analyzer MUST generate a single deterministic file:
 ```
 analysis_results.json
 ```
+
+**Required JSON structure**
 ```json
 {
-  "repository": "<sanitized github_repo_url>",
-  "commit_sha": "<sha-from-zip-folder>",
-  "scan_date": "<ISO8601>",
-  "tree_file_count": <n>,
-  "tree_total_bytes": <n>,
+  "repository": "<sanitized_github_repo_url>",
+  "commit_sha": "<sha_from_zip_folder>",
+  "scan_date": "<ISO8601_timestamp>",
+  "tree_file_count": <integer>,
+  "tree_total_bytes": <integer>,
+  "analysis_results_sha256": "<sha256_of_this_file>",
   "findings": [
     {
       "analysis": "2.x",
       "type": "<category>",
       "file": "relative/path/from/repo/root",
-      "line": 0,
-      "code_snippet": "string <= 240 chars, one-line trimmed",
+      "line": <integer>,
+      "code_snippet": "string <= 240 chars, trimmed to one line",
       "severity": "low | medium | high | critical",
       "recommendation": "short actionable text"
     }
   ]
 }
 ```
-The script MUST compute and emit analysis_results_sha256 (SHA‑256 hash) to be logged in execution_log.json
+**Requirements**
+* The JSON MUST be valid, deterministic, UTF‑8, serialized with sort_keys=true.
+* The JSON MUST reflect exactly the findings detected by the analyzer (no omissions, no additions).
+* analysis_results_sha256 MUST be computed by the analyzer and logged in execution_log.json.
 
 **LLM Restrictions**
 The LLM may read only:
