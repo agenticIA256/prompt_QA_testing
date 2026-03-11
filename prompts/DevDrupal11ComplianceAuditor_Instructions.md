@@ -254,6 +254,11 @@ with **EXACTLY 3 positional arguments**. Two supported signatures exist:
 
  **( A ) URL/REF/WORKDIR signature (preferred)** 
 ```
+python analyze_drupal_repo.py "<repo_root_abs>" "<commit_sha_40>" "<output_path_abs>"
+```
+
+**( B ) ROOT/SHA/OUTPUT signature (legacy)**
+```
 python ./data/runs/tools/analyze_drupal_repo.py "<repo_root_abs>" "<commit_sha_40>" "<output_path_abs>"
 ```
 
