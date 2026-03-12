@@ -35,10 +35,27 @@ The audit must rely **only** on verifiable repository files.
 * github
 * confluence
 
-# 🧩 HITL Notes
-* The Orchestrator will pause after GENERATION (DoR check)  
-* and after EXECUTION (DoD check)
-* before continuing to the next agent.  
+# 🧩 HITL Interaction Rules (State Machine)
+
+The agent must manage Human‑In‑The‑Loop (HITL) interactions with an internal HITL state.
+
+- When a HITL pause is required, the agent must set an internal flag:
+  `awaiting_hitl = true`
+- The agent must instruct the user with the following exact message:
+  **"Type `continue` to proceed."**
+
+## Behavior Rules
+
+- When `awaiting_hitl = true`:
+  - If the user message is exactly `continue` (case‑insensitive),
+    → The agent resumes the workflow at the next step.
+  - Otherwise:
+    → The agent must respond:
+      **"Human validation required. Type `continue` to resume."**
+
+- After receiving `continue`:
+  - The agent must set `awaiting_hitl = false`
+  - The workflow continues normally.
 
 # 🛡️ RAI RULES
 
@@ -640,58 +657,80 @@ print(f"[Step 3] Compliance score = {elog['compliance_score']}")
 print(f"[Step 3] Updated execution log: {elog_path}")
 ```
 
-## 🧑‍⚖️ Step 4 – HITL
-### 4.0 — Create hitl_status.json ###
-The agent must create the file:
-```json
-{
-  "hitl_validation": {
-    "status": "pending",
-    "reviewer": null,
-    "timestamp": null
-  }
-}
+## 🧑‍⚖️ Step 4 – HITL (Human‑In‑The‑Loop)
+
+### 4.0 — HITL Pause Trigger
+After Step 3 completes, the agent must pause execution and output:
+
+**HITL — Required Human Action**  
+Review the generated outputs.  
+Type `continue` to proceed.
+
+The agent must then set:
+`awaiting_hitl = true`
+
+The agent must not proceed until the user types:
 ```
-Then pause and proceed to 4.1.
+continue
+```
 
 ---
-### 4.1 — HITL Stage 1 (DoR Validation — human action) ###
-The agent must pause and display **HITL — Required Human Action:**
+
+### 4.1 — HITL Stage 1 (DoR Human Validation)
+After Step 1 and Step 2 preparation phases (generation of repo.zip, extraction, analysis_results.json, execution_log.json),  
+the agent must pause and output:
+
+**HITL — Required Human Action**
 
 The human reviewer must:
+
 1. Open the run directory.
-2. Verify that repository acquisition was successful (ZIP present, extracted folder ends with a 40‑char SHA).
-3. Verify that analysis_results.json and execution_log.json exist.
-4. Confirm that repo.clone_method == "zip" and repo.git_ref_resolved is a valid 40‑character SHA.
+2. Verify:
+   - Repository ZIP exists
+   - Extracted folder ends with a 40‑character SHA
+   - `analysis_results.json` exists
+   - `execution_log.json` exists
+   - `repo.clone_method == "zip"`
+   - `repo.git_ref_resolved` is a valid 40‑character SHA
 
-The agent must not proceed until hitl_status.json is updated to:
+Then type:
 ```
-"status": "approved"
+continue
 ```
 
-### 4.2 — HITL Stage 2 (DoD Validation — human action)
-After the analyzer finishes, the agent must pause again and display **HITL — Required Human Action:**
+The agent must not proceed until the user does so.
 
-The human reviewer must:
+---
 
-1. Review: analysis_results.json
-  * analysis_results.json
-  * execution_log.json
-  * drupal11_audit_report.md
-2. Update hitl_status.json to either:
-  * "approved"
-  * "changes-required"
+### 4.2 — HITL Stage 2 (DoD Human Validation)
+After the analyzer script generates all artifacts, the agent must pause again and output:
 
-The agent must not proceed until "approved"
+**HITL — Required Human Action**
 
-### 4.3 — Post‑Approval Actions (agent)
-When "status": "approved" is present in hitl_status.json:
+The human reviewer must review:
 
-* Upload drupal11_audit_report.md to Confluence.
-* Update execution_log.json with:
-  * Confluence URL.
-  * Upload timestamp.
-* Continue with downstream workflow steps.
+- `analysis_results.json`
+- `execution_log.json`
+- `drupal11_audit_report.md`
+- `analysis_results_sha256` (if present)
+
+Then type:
+```
+continue
+```
+
+The agent must not proceed until this is done.
+
+---
+
+### 4.3 — Post‑Approval Actions (Agent)
+When the user types `continue` after DoD validation:
+
+- Upload `drupal11_audit_report.md` to Confluence.
+- Update `execution_log.json` with:
+  - Confluence URL
+  - Upload timestamp
+- Continue with all downstream workflow steps.
 
 ## Step 5 — Reporting Constraints
 * The report MUST reflect analysis_results.json and the compliance score from execution_log.json ONLY.
