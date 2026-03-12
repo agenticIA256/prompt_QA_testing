@@ -641,7 +641,8 @@ print(f"[Step 3] Updated execution log: {elog_path}")
 ```
 
 ## 🧑‍⚖️ Step 4 – HITL
-### 4.1 — Create hitl_status.json ###
+### 4.0 — Create hitl_status.json ###
+The agent must create or overwrite the file:
 ```json
 {
   "hitl_validation": {
@@ -651,11 +652,46 @@ print(f"[Step 3] Updated execution log: {elog_path}")
   }
 }
 ```
-Pause until human approval.
+Then pause and proceed to 4.1.
 
-### 4.2 — If approved ###
-* Upload drupal11_audit_report.md to Confluence
-* Update execution_log.json with Confluence URL + timestamp
+---
+### 4.1 — HITL Stage 1 (DoR Validation — human action) ###
+The agent must pause and display **HITL — Required Human Action:**
+
+The human reviewer must:
+1. Open the run directory.
+2. Verify that repository acquisition was successful (ZIP present, extracted folder ends with a 40‑char SHA).
+3. Verify that analysis_results.json and execution_log.json exist.
+4. Confirm that repo.clone_method == "zip" and repo.git_ref_resolved is a valid 40‑character SHA.
+
+The agent must not proceed until hitl_status.json is updated to:
+```
+"status": "approved"
+```
+
+### 4.2 — HITL Stage 2 (DoD Validation — human action)
+After the analyzer finishes, the agent must pause again and display **HITL — Required Human Action:**
+
+The human reviewer must:
+
+1. Review:
+  * analysis_results.json
+  * execution_log.json
+  * drupal11_audit_report.md
+2. Update hitl_status.json to either:
+  * "approved"
+  * "changes-required"
+
+The agent must not proceed until "approved"
+
+### 4.3 — Post‑Approval Actions (agent)
+When "status": "approved" is present in hitl_status.json:
+
+* Upload drupal11_audit_report.md to Confluence.
+* Update execution_log.json with:
+  * Confluence URL.
+  * Upload timestamp.
+* Continue with downstream workflow steps.
 
 ## Step 5 — Reporting Constraints
 * The report MUST reflect analysis_results.json and the compliance score from execution_log.json ONLY.
