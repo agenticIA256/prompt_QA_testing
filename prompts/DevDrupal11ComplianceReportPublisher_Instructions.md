@@ -144,49 +144,78 @@ instructions”, etc.).
 - All RAI rules respected.  
 
 # 🧭 Workflow / Steps
-1. Resolve inputs
 
-  Convert all paths to absolute canonical paths.
-        
-2. Load Markdown (tool: python)
+1. **Resolve inputs**
 
-  * Read file without sending content to LLM
-  * If empty → DoR FAIL
+   Convert all paths to absolute canonical paths.
 
-  3. Convert Markdown → Confluence Storage (python only)
-  
-    * No LLM rewriting
-    * Preserve all structure (see preservation rules)
-    * Convert:
-      * headings → <h1>…</h1>
-      * tables → <table><tr>…
-      * lists → <ul>, <ol>
-      * code blocks → <ac:structured-macro ac:name="code">
-      * inline code → <code>
+2. **Load Markdown** (tool: `python`)
 
-  5. Validate preservation (python)
-    * Count tables/headings/lists/code blocks
-    * If mismatch → fallback "circuit_breaker"
+   * Read the file without sending its content to the LLM.
+   * If the file is empty → **DoR FAIL**.
 
-  6. Process attachments
-    * Resolve image paths relative to markdown
-    * Upload attachments via confluence tool
-    * Rewrite links inside XHTML to Confluence URLs
+3. **Convert Markdown → Confluence Storage Format** (python only)
 
-  7. Determine page title
-    * If provided → use it
-    * Else → Drupal 11 Audit — <repo> — <commit_sha> — <timestamp>
+   * No LLM rewriting.
+   * Preserve all structure (see preservation rules).
 
-  8. Create Confluence page
-    * Using confluence tool
-    * Body must be Confluence Storage Format XHTML
-    * Attach files
-     
-  9. Write artifacts to <dirname(report_path)>/publisher/<timestamp>/:
-     * confluence_publish_report.json (page id, URL, version, attachments, stats)
-     * execution_log.json (append fields; do not erase upstream content)
-       
-  10. Append Task Execution Report: API calls, files processed, timing, errors.
+   Convert elements as follows:
+
+   * headings → `<h1> … </h1>`
+   * tables → `<table><tr> …`
+   * lists → `<ul>` / `<ol>`
+   * code blocks → `<ac:structured-macro ac:name="code">`
+   * inline code → `<code>`
+
+4. **Validate preservation** (tool: `python`)
+
+   Compare structural counts between the source Markdown and the generated XHTML:
+
+   * headings
+   * tables
+   * lists
+   * code blocks
+
+   If a mismatch is detected → fallback **`circuit_breaker`**.
+
+5. **Process attachments**
+
+   * Resolve image paths relative to the Markdown file.
+   * Upload attachments using the `confluence` tool.
+   * Rewrite image links in XHTML to Confluence attachment URLs.
+
+6. **Determine page title**
+
+   * If `page_title` is provided → use it.
+   * Otherwise generate: Drupal 11 Audit — <repo> — <commit_sha> — <timestamp>
+
+7. **Create Confluence page**
+
+Using the `confluence` tool:
+
+* Body must be **Confluence Storage Format XHTML**.
+* Attach all required files.
+
+8. **Write artifacts**
+
+Write outputs to: <dirname(report_path)>/publisher/<timestamp>/
+
+Generated files:
+
+* `confluence_publish_report.json`  
+  (page id, URL, version, attachments, stats)
+
+* `execution_log.json`  
+  Append publisher fields without erasing upstream data.
+
+9. **Append Task Execution Report**
+
+Include:
+
+* API calls performed
+* files processed
+* execution timing
+* errors (if any)
 
 # 📦 Outputs / Artifacts
 Stored in:
