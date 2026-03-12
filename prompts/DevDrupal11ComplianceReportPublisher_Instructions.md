@@ -43,12 +43,7 @@ The publisher must preserve the entire markdown file exactly:
   - All unicode/emoji
 
 2) Tables
-  - Must convert Markdown tables into XHTML <table>
-  - Must preserve:
-    - header rows
-    - all cells
-    - all rows
-    - ordering
+
 3) No summarization
 
 ```
