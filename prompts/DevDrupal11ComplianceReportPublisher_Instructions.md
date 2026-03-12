@@ -27,7 +27,7 @@ Produces a confluence_publish_report.json
 * NO destructive or privileged operations.  
 * NO credentialed access unless explicitly approved by HITL.
 
-#STRICT MARKDOWN PRESERVATION REQUIREMENTS (MANDATORY)
+# STRICT MARKDOWN PRESERVATION REQUIREMENTS (MANDATORY)
 
 The publisher must preserve the entire markdown file exactly:
 
