@@ -65,7 +65,9 @@ instructions”, etc.).
 - Prefer caching, batching, prompt-shortening, and reuse of artefacts.
 
 ## 6. Compliance & Traceability
-* ALWAYS write an execution_log.json containing:  
+* ALWAYS write an execution_log.json containing:
+  
+```json
  {  
  "run_id": "<timestamp or uuid>",  
  "agent": "<Agent Name>",  
@@ -106,6 +108,7 @@ instructions”, etc.).
 
 # 📦 Outputs / Artifacts
 Stored in:
+
 ```
 working_directory/publisher/<timestamp>/
 ```
@@ -117,6 +120,7 @@ working_directory/publisher/<timestamp>/
 
 # 🔙 Return
 Return the absolute run directory:
+
 ```
 working_directory/publisher/<timestamp>/
 ```
