@@ -8,6 +8,13 @@
   "issue_type": string,
   "locale": string,
   "dry_run": boolean (default true),
+
+  "xray_client_id": string,          // NEW
+  "xray_client_secret": string,      // NEW
+
+  "jira_email": string,              // OPTIONAL (fallback)
+  "jira_api_token": string,          // OPTIONAL (fallback)
+
   "xray_overrides": {
     "manual": {
       "steps_field_id": string,
@@ -50,7 +57,11 @@
    - Append a Task Execution Report that lists: operations performed, files read/written, remote endpoints called (method, path, status), items created/updated (issue keys), and any user‑visible side effects.
    - Record tool/library versions used (agent version, Jira/Xray API versions).
 2. Data & Security
-   - NEVER  output secrets or tokens. Jira/Xray credentials are loaded from ./config/config.json.
+      - NEVER output secrets or tokens.  
+   - Jira/Xray credentials MUST be provided via agent inputs:  
+   - `jira_email`, `jira_api_token`  
+   - `xray_client_id`, `xray_client_secret`  
+   - These values MUST be used for authentication but MUST NOT appear in logs, bundles, receipts or execution logs.  
    - Sanitize all inputs (URLs, JSON, file paths).
    - Redact any PII encountered.
    - Use least-privilege assumptions.
@@ -86,6 +97,26 @@
    - Provide a ready-to-paste JIRA ticket body block inside the Markdown bundle (if applicable).
    - Ensure the bundle includes a concise DoR/DoD checklist outcome and a link list to every receipt/evidence artefact.
 
+## 🔐 Credential Resolution Override
+
+If credentials are passed directly via inputs, the agent MUST:
+1. ALWAYS use the following fields if present:
+   - `xray_client_id`
+   - `xray_client_secret`
+   - `jira_email`
+   - `jira_api_token`
+
+2. IGNORE the file `./config/config.json` entirely.
+3. NEVER fallback to simulation mode if:
+   - `xray_client_id` and `xray_client_secret` are present  
+     → Real Xray authentication MUST be executed.
+4. Secrets MUST NOT appear in:
+   - execution_log.json  
+   - receipts.json  
+   - bundle Markdown  
+   - any LLM output
+5. Transmission to tools (http/jira) MUST be sanitized to avoid leakage.
+
 **QASH GATES**
 
 **DoR (Definition of Ready — pre-run)**
@@ -115,7 +146,10 @@ DoD (Definition of Done — post-run)
  Si xray_mode=Manual → chaque case contient ≥ 1 step (ou est marquée Generic/Unstructured).
  Si xray_mode=Automated → présence d’un bloc bdd (ou de quoi générer un .feature).
 * Sanitize (paths/URLs/JSON) + redact PII ; vérifier xray_mode ∈ {Manual, Automated} (insensible à la casse).
-* Charger les secrets via config (non loggués).
+* * Charger les secrets via inputs :
+  - Jira: `jira_email` + `jira_api_token`
+  - Xray: `xray_client_id` + `xray_client_secret`
+* NE PAS charger ./config/config.json
 Jira : PAT ; si token scopé, les appels passent par https://api.atlassian.com/ex/jira/{cloudId} ; sinon https://<tenant>.atlassian.net.
 Xray : client_id / client_secret (API Keys) pour REST v2 & GraphQL. 
 
