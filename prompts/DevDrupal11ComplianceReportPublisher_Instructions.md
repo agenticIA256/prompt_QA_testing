@@ -144,13 +144,14 @@ instructions”, etc.).
 - All RAI rules respected.  
 
 # 🧭 Workflow / Steps
-  1. Resolve inputs
-  
-  Convert all paths to absolute canonical paths.
+1. Resolve inputs
+
+Convert all paths to absolute canonical paths.
         
-  2. Load Markdown (tool: python)
-    * Read file without sending content to LLM.
-    * If empty → DoR FAIL.
+2. Load Markdown (tool: python)
+
+  * Read file without sending content to LLM
+  * If empty → DoR FAIL
 
   3. Convert Markdown → Confluence Storage (python only)
     * No LLM rewriting
