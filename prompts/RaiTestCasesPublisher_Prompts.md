@@ -140,126 +140,170 @@ DoD (Definition of Done — post-run)
 - E2E links ready for the Traceability Binder (CASE↔ISSUE_KEY).
 - All RAI rules respected.
 
-#WORKFLOW / STEPS
-** 1) Load & Validate Inputs**
-* Lire test_cases_path, valider le schéma minimal { cases:[…] }.
- Si xray_mode=Manual → chaque case contient ≥ 1 step (ou est marquée Generic/Unstructured).
- Si xray_mode=Automated → présence d’un bloc bdd (ou de quoi générer un .feature).
-* Sanitize (paths/URLs/JSON) + redact PII ; vérifier xray_mode ∈ {Manual, Automated} (insensible à la casse).
-* * Charger les secrets via inputs :
-  - Jira: `jira_email` + `jira_api_token`
-  - Xray: `xray_client_id` + `xray_client_secret`
-* NE PAS charger ./config/config.json
-Jira : PAT ; si token scopé, les appels passent par https://api.atlassian.com/ex/jira/{cloudId} ; sinon https://<tenant>.atlassian.net.
-Xray : client_id / client_secret (API Keys) pour REST v2 & GraphQL. 
+## WORKFLOW / STEPS
 
-**2) Transform & Map (Xray)**
- * Commun
+1) Load & Validate Inputs
+
+Lire test_cases_path, valider le schéma minimal { cases:[…] }.
+
+Si xray_mode=Manual → chaque case doit contenir ≥ 1 step.
+Si xray_mode=Automated → présence d’un bloc bdd ou possibilité de générer un .feature.
+
+
+Sanitize (paths/URLs/JSON) + redact PII.
+Vérifier que xray_mode ∈ {Manual, Automated}.
+Charger les secrets via inputs :
+
+Jira → jira_email, jira_api_token
+Xray → xray_client_id, xray_client_secret
+
+
+NE PAS charger ./config/config.json.
+Jira : PAT vers https://<tenant>.atlassian.net.
+Xray Cloud : authentification REST v2 + mutations GraphQL.
+
+
+2) Transform & Map (Xray)
+Commun
+
 Normaliser summary, labels, priority, locale.
-Préparer preconditions[] (facultatif) : chaque précondition avec un summary et une définition (texte) ; prévoir une clé d’idempotence (ex. hash du summary).
+Normaliser preconditions[] avec summary + description + idempotence key.
 
- * Manual
-Construire steps[] : { action, data, expected_result }.
-Si expected_result manque, définir une valeur par défaut (“Expected: n/a”) ou remonter une erreur DoR (selon ta politique).
+Manual
 
- * Automated
-Si bloc bdd → générer le .feature (Feature/Scenario + Given/When/Then, tags).
-Sinon → Generic : pas de steps ; garder automation.* (framework/module/test_name/external_id).
-Écrire mapping_applied.json (mappage générique → Xray, defaults & règles appliquées).
+Construire steps[] = {action, data, expected_result}.
+Si expected_result vide → “Expected: n/a”.
 
-**3) Publish (or Dry‑run)**
-dry_run=true → produire receipts.json simulé, aucune mutation réseau.
-dry_run=false → exécuter en batch (20), retries exponentiels (3) + jitter, respect du rate‑limit ; logs sans secret.
+Automated
 
-**3.A — Manual (Test + Steps + Pre‑conditions)**
-* Créer les Pre‑Conditions (si fournies)
-* Pour chaque entrée precondition, POST Jira REST v3 …/rest/api/3/issue avec issuetype={name:"Pre-Condition"} + summary + description (ADF) ; consigner la clé (<PROJ>-xxx). Les Pre‑Conditions sont des issues Jira comme les Tests.
-* Créer le Test (Jira)
-* POST Jira REST v3 …/rest/api/3/issue avec issuetype={name:"Test"}, summary, labels, description (ADF) ; récupérer issueKey. Les contenus riches doivent être en ADF en v3. 
-* Relier les Pre‑Conditions au Test (Xray)
-* Xray GraphQL : créer les liens Pre‑Condition → Test (relation gérée côté Xray GraphQL).
-* - Après avoir créé l'issue Test dans Jira, tu DOIS créer les steps Xray en appelant explicitement le tool `python`.
-  N'utilise PAS le tool `http` (il force verify=True et échoue avec Xray Cloud SSL).
-  Tu DOIS exécuter le script Python ci-dessous via `python.run`.
-  C’est une étape obligatoire du workflow.
+BDD → générer .feature complet.
+Sinon Generic → pas de steps.
+Écrire mapping_applied.json.
 
-  Pour cela :
-  1. Prépare la variable issue_id (clé du Test Jira, ex: "KAN-209")
-  2. Prépare la variable steps sous forme de liste Python :
-        [{"action": "...", "data": "...", "result": "..."}]
-  3. Appelle le tool python comme ceci :
 
-  python.run:
-    code: |
-        import requests
-        import json
+3) Publish (or Dry‑run)
 
-        def publish_xray_steps(issue_id, steps, client_id, client_secret):
-            auth_res = requests.post(
-                "https://xray.cloud.getxray.app/api/v2/authenticate",
-                json={"client_id": client_id, "client_secret": client_secret},
-                verify=False
-            )
-            token = auth_res.text.strip('"')
+dry_run=true → aucune mutation réseau, produire receipts.json simulé.
+dry_run=false → exécuter en batch, retries, backoff, respect du rate-limit.
 
-            mutation = '''
-            mutation($issueId: String!, $steps: [TestStepInput!]!) {
-                addTestSteps(issueId: $issueId, steps: $steps) {
-                    updatedTest { issueId }
-                }
-            }
-            '''
 
-            payload = {
-                "query": mutation,
-                "variables": {
-                    "issueId": issue_id,
-                    "steps": steps
-                }
-            }
+3.A — Manual (Test + Xray GraphQL Steps + Pre‑conditions)
+Préconditions
 
-            res = requests.post(
-                "https://xray.cloud.getxray.app/api/v2/graphql",
-                json=payload,
-                headers={"Authorization": f"Bearer {token}"},
-                verify=False
-            )
+Pour chaque précondition → POST Jira REST v3 /issue avec issuetype=Pre-Condition.
+Récupérer les clés <PROJ>-xxx.
 
-            print("STATUS:", res.status_code)
-            print("BODY:", res.text)
+Créer le Test Jira
 
-        publish_xray_steps(issue_id, steps, xray_client_id, xray_client_secret)
+POST /rest/api/3/issue avec :
 
-  Tu DOIS appeler ce bloc python.run pour chaque Test créé.
-* Créer les Steps Xray (action / data / expected)
-* Auth Xray → POST /api/v2/authenticate pour obtenir un Bearer. 
-* GraphQL Xray : créer/mettre à jour les steps du Test (un appel par lot ou itératif) avec action, data, result (= expected_result).
-* Sur Xray Cloud, le CRUD des steps passe par GraphQL, pas par des customfield_*. 
-* Vérifier via une requête GraphQL de lecture que le nombre de steps = source et que result n’est pas vide.
-* (Option) Lier Test Plans / Test Sets
-* Créer/associer via Jira (création des issues), puis lier via Xray GraphQL (relations Xray). 
-When publishing steps to Xray Cloud, DO NOT use the http tool.
-Instead, use the python tool to execute a Python script that sends the GraphQL mutation.
+issuetype=Test
+summary
+labels
+description SANS steps → ne jamais inclure action/data/expected dans la description.
 
-**3.B — Automated**
-* Cucumber :
-POST https://xray.cloud.getxray.app/api/v2/import/feature?projectKey=<PROJ> avec le .feature (multipart) → Xray crée/MAJ les Tests Cucumber (tags → labels, mapping scenario → test).
 
-* Generic :
-POST Jira REST v3 pour créer le Test ; stocker automation.* pour la traçabilité ; (imports de résultats à part si nécessaire). 
+Récupérer issueKey.
+Le champ description doit contenir uniquement :
 
-**4) Post‑Publish Linking & Evidence**
-* Récupérer issueKey/URLs créés (Tests, Pre‑Conditions, Plans/Sets/Executions).
-* Couverture (facultatif) : s’assurer que le lien Jira Name=Test / Outward=tests / Inward=is tested by existe si tu relies à des exigences (utile à l’import Cucumber @KEY-123). 
-* Agréger payloads & réponses (abrégées, sans secrets) dans jira_publisher_bundle.md.
+title
+scenario context
+preconditions
+expected outcomes
+traceability
+metadata
+Les steps ne doivent pas apparaître dans la description Jira.
 
-** 5) Write Artefacts (./data/runs/publish_xray/<timestamp>/)**
-* jira_publisher_bundle.md (résumé + preuves + bloc Jira prêt à coller + Task Execution Report + DoR/DoD)
-execution_log.json (RAI log structuré), mapping_applied.json, receipts.json, errors.json (si besoin)
-(carry‑through si fournis) features.json, flows.json, risks_suspicions.json
 
-**6) DoR/DoD write‑backs to Markdown**
-* Insérer les sections DoR/DoD remplies dans le bundle, puis pause HITL (Orchestrateur).
+
+Relier Pre‑Conditions → Test
+
+Utiliser Xray GraphQL (mutation linkPrecondition).
+
+
+⭐ Créer les Steps Xray (OBLIGATOIRE avec python.run)
+⚠️ IMPORTANT :
+
+NE PAS utiliser le tool http (il force SSL verify=True → erreur Xray).
+Utiliser EXCLUSIVEMENT python.run pour publier les Steps via GraphQL.
+
+** 🔧 Bloc Python EXACT à exécuter via python.run
+python.run:
+  code: |
+      import requests
+      import json
+
+      def publish_xray_steps(issue_id, steps, client_id, client_secret):
+          # Auth Xray REST v2 (verify=False contourne le SSL du sandbox)
+          auth_res = requests.post(
+              "https://xray.cloud.getxray.app/api/v2/authenticate",
+              json={"client_id": client_id, "client_secret": client_secret},
+              verify=False
+          )
+          token = auth_res.text.strip('"')
+
+          # Mutation GraphQL
+          mutation = """
+          mutation($issueId: String!, $steps: [TestStepInput!]!) {
+              addTestSteps(issueId: $issueId, steps: $steps) {
+                  updatedTest { issueId }
+              }
+          }
+          """
+
+          payload = {
+              "query": mutation,
+              "variables": {
+                  "issueId": issue_id,
+                  "steps": steps
+              }
+          }
+
+          res = requests.post(
+              "https://xray.cloud.getxray.app/api/v2/graphql",
+              json=payload,
+              headers={"Authorization": f"Bearer {token}"},
+              verify=False
+          )
+
+          print("STATUS:", res.status_code)
+          print("BODY:", res.text)
+
+      publish_xray_steps(issue_id, steps, xray_client_id, xray_client_secret)
+L’agent DOIT appeler ce bloc pour CHAQUE Test Jira créé.
+Validation
+
+Lire steps via GraphQL → vérifier count + expected_result non vide.
+Optionnel : lier Test Plans / Test Sets via GraphQL.
+
+
+3.B — Automated
+
+Import .feature → POST /api/v2/import/feature?projectKey=<PROJ> (Cucumber).
+Ou créer Test Generic via Jira REST v3.
+
+
+4) Post‑Publish Linking & Evidence
+
+Récupérer URLs + issueKeys.
+Ajouter couverture (optionnel).
+Écrire jira_publisher_bundle.md.
+
+
+5) Write Artefacts (./data/runs/publish_xray/<timestamp>/)</timestamp>
+
+jira_publisher_bundle.md
+execution_log.json
+receipts.json
+mapping_applied.json
+errors.json
+features.json, flows.json, risks_suspicions.json
+
+
+6) DoR/DoD write‑backs
+
+Injecter les Sections DoR/DoD dans la bundle.
+      
 
 **OUTPUTS / ARTEFACTS**
 - features.json : reprise/carry-through (traçabilité)
