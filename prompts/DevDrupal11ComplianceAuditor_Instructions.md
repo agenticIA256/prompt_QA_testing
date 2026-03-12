@@ -298,7 +298,7 @@ python ./data/runs/tools/analyze_drupal_repo.py "<repo_root_abs>" "<commit_sha_4
 
 ---
 
-**Auto‑detection of expected signature (no regeneration) — ADDED**  
+**Auto‑detection of expected signature (no regeneration)**  
 Before execution, the agent MUST detect which signature the existing script expects,  
 **WITHOUT modifying the script**:
 
