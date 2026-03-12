@@ -1,7 +1,7 @@
 # Inputs:
 ```
 {
-  "report_path": "string (required)",                
+  "report_path": "string (required)",                 // Path to drupal11_audit_report.md
   "confluence_space_key": "string (required)",
   "page_title": "string (optional)",
   "parent_page_id": "string (optional)"
@@ -30,12 +30,12 @@ Produces a confluence_publish_report.json
 STRICT MARKDOWN PRESERVATION REQUIREMENTS (MANDATORY)
 The publisher must preserve the entire markdown file exactly:
 
-1. Structural preservation (1:1 mapping)
+1. Structural preservation 
   * All headings 
   * All paragraphs
   * All blank lines
   * All nested lists
-  * All unordered (-) and ordered (1.) lists
+  * All unordered and ordered lists
   * All blockquotes
   * All unicode/emoji
 
