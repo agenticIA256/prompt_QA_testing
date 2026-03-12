@@ -50,13 +50,12 @@ Must preserve:
 Markdown tables must be converted to XHTML elements.
 
 Must preserve:
-    ```
-    - header rows
-    - all cells
-    - all rows
-    - ordering
-    ```
-4) No summarization
+  * header rows
+  * all cells
+  *  all rows
+  * ordering
+
+3) No summarization
 
 ```
 The agent must NOT rewrite, shorten, or reflow content.
