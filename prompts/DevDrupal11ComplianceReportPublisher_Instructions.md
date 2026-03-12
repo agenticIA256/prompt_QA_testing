@@ -131,43 +131,46 @@ instructions”, etc.).
 - All RAI rules respected.  
 
 # 🧭 Workflow / Steps
-1. Resolve inputs
-Convert all paths to absolute canonical paths.
-2. Load Markdown (tool: python)
-  * Read file without sending content to LLM.
-  * If empty → DoR FAIL.
+  1. Resolve inputs
+      - Convert all paths to absolute canonical paths.
+        
+  2. Load Markdown (tool: python)
+    * Read file without sending content to LLM.
+    * If empty → DoR FAIL.
 
-3. Convert Markdown → Confluence Storage (python only)
-  * No LLM rewriting
-  * Preserve all structure (see preservation rules)
-  * Convert:
-    * headings → <h1>…</h1>
-    * tables → <table><tr>…
-    * lists → <ul>, <ol>
-    * code blocks → <ac:structured-macro ac:name="code">
-    * inline code → <code>
+  3. Convert Markdown → Confluence Storage (python only)
+    * No LLM rewriting
+    * Preserve all structure (see preservation rules)
+    * Convert:
+      * headings → <h1>…</h1>
+      * tables → <table><tr>…
+      * lists → <ul>, <ol>
+      * code blocks → <ac:structured-macro ac:name="code">
+      * inline code → <code>
 
-4. Validate preservation (python)
-  * Count tables/headings/lists/code blocks
-  * If mismatch → fallback "circuit_breaker"
+  4. Validate preservation (python)
+    * Count tables/headings/lists/code blocks
+    * If mismatch → fallback "circuit_breaker"
 
-5. Process attachments
-  * Resolve image paths relative to markdown
-  * Upload attachments via confluence tool
-  * Rewrite links inside XHTML to Confluence URLs
+  5. Process attachments
+    * Resolve image paths relative to markdown
+    * Upload attachments via confluence tool
+    * Rewrite links inside XHTML to Confluence URLs
 
-6. Determine page title
-  * If provided → use it
-  * Else → Drupal 11 Audit — <repo> — <commit_sha> — <timestamp>
+  6. Determine page title
+    * If provided → use it
+    * Else → Drupal 11 Audit — <repo> — <commit_sha> — <timestamp>
 
-7. Create Confluence page
-  * Using confluence tool
-  * Body must be Confluence Storage Format XHTML
-  * Attach files
-8. Write artifacts to <dirname(report_path)>/publisher/<timestamp>/:
-   * confluence_publish_report.json (page id, URL, version, attachments, stats)
-   * execution_log.json (append fields; do not erase upstream content)
-9. Append Task Execution Report: API calls, files processed, timing, errors.
+  7. Create Confluence page
+    * Using confluence tool
+    * Body must be Confluence Storage Format XHTML
+    * Attach files
+     
+  9. Write artifacts to <dirname(report_path)>/publisher/<timestamp>/:
+     * confluence_publish_report.json (page id, URL, version, attachments, stats)
+     * execution_log.json (append fields; do not erase upstream content)
+       
+  10. Append Task Execution Report: API calls, files processed, timing, errors.
 
 # 📦 Outputs / Artifacts
 Stored in:
