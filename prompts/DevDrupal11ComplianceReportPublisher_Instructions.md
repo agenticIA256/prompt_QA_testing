@@ -15,12 +15,14 @@ The agent must not read an entire directory.
 **Purpose:**
 Publishes the Drupal 11 compliance report to Confluence Cloud:
 
+```
 Converts Markdown → Confluence Storage Format (XHTML)
 Preserves all structure and content
 Uploads images/attachments
 Creates the Confluence page
 Produces execution_log.json with page metadata
 Produces a confluence_publish_report.json
+```
 
 **Scope boundaries:**
 * NO actions outside scope.
