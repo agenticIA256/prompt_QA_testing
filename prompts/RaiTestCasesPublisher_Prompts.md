@@ -139,7 +139,7 @@ DoD (Definition of Done — post-run)
 - E2E links ready for the Traceability Binder (CASE↔ISSUE_KEY).
 - All RAI rules respected.
 
-## WORKFLOW / STEPS
+
 ## WORKFLOW / STEPS
 ** 1) Load & Validate Inputs**
 * Lire test_cases_path, valider le schéma minimal { cases:[…] }.
@@ -154,13 +154,62 @@ Jira : PAT ; si token scopé, les appels passent par https://api.atlassian.com
 Xray : client_id / client_secret (API Keys) pour REST v2 & GraphQL. 
 
 **2) Transform & Map (Xray)**
- * Commun
-Normaliser summary, labels, priority, locale.
-Préparer preconditions[] (facultatif) : chaque précondition avec un summary et une définition (texte) ; prévoir une clé d’idempotence (ex. hash du summary).
+* Commun  
+  - Normaliser summary, labels, priority, locale.
+  
+  - Préparer preconditions[] :
+        * Chaque précondition doit être un objet structuré avec:
+            - summary
+            - description texte simple (contexte métier)
+        * Ces préconditions représentent la logique métier.
+        * Elles NE DOIVENT PAS être incorporées dans les steps ou dans la description Jira.
+        * Une clé d'idempotence (hash du summary) doit être utilisée.
 
- * Manual
-Construire steps[] : { action, data, expected_result }.
-Si expected_result manque, définir une valeur par défaut (“Expected: n/a”) ou remonter une erreur DoR (selon ta politique).
+  - Préparer expected outcomes métier :
+        * Ce sont des résultats attendus globaux, non liés aux steps.
+        * Ils NE DOIVENT PAS être placés dans les steps Xray automatiquement.
+
+  - Le champ description Jira doit contenir UNIQUEMENT :
+        * Test Case ID
+        * Scenario Context
+        * Preconditions (sous forme textuelle et métier)
+        * Expected Outcomes métier
+        * Traceability (Risk↔AC↔Scenario↔Case)
+        * Metadata (priority, languages)
+
+  - NE JAMAIS insérer :
+        * Steps
+        * expected_result des steps
+        * data sets
+        * données techniques
+  dans la description Jira.
+
+
+* Manual  
+  - Construire steps[] pour Xray sous forme :
+        { "action": "...", "data": "...", "result": "expected_result" }
+
+  - Le expected_result dans steps DOIT correspondre au expected_result détaillé,
+    différent des "Expected Outcomes" métier.
+
+  - Les steps NE DOIVENT PAS être mis dans la description Jira.
+    Ils seront créés EXCLUSIVEMENT via Xray GraphQL.
+
+  - Les expected_result des steps NE DOIVENT PAS être placés dans la description Jira.
+
+  - Préconditions Xray :
+        * Les preconditions métier préparées plus haut doivent être créées
+          comme issues Xray de type "Pre-Condition" via Jira REST,
+          PUIS liées via Xray GraphQL.
+        * Elles NE DOIVENT PAS être dupliquées dans steps ou dans la description.
+
+  - Utiliser python.run pour :
+        * authentifier Xray (verify=False)
+        * envoyer la mutation addTestSteps
+        * lier les preconditions
+        * vérifier les steps créés
+
+  - Ne jamais utiliser le tool http pour Xray GraphQL.
 
  * Automated
 Si bloc bdd → générer le .feature (Feature/Scenario + Given/When/Then, tags).
@@ -172,7 +221,14 @@ dry_run=true → produire receipts.json simulé, aucune mutation réseau.
 dry_run=false → exécuter en batch (20), retries exponentiels (3) + jitter, respect du rate‑limit ; logs sans secret.
 
 **3.A — Manual (Test + Steps + Pre‑conditions)**
-* Créer les Pre‑Conditions (si fournies)
+
+** 3.A.1 — Créer les Pre‑Conditions (si fournies)
+Pour chaque entrée precondition :
+* POST Jira REST v3 : /rest/api/3/issue avec :
+issuetype = { "name": "Pre-Condition" }summary   = "<précondition summary>"description = "<définition métier en ADF>"
+* Stocker la clé <PROJ>-xxx.
+* Ces issues sont des objets Xray Pre‑Condition, pas des steps.
+
 * Pour chaque entrée precondition, POST Jira REST v3 …/rest/api/3/issue avec issuetype={name:"Pre-Condition"} + summary + description (ADF) ; consigner la clé (<PROJ>-xxx). Les Pre‑Conditions sont des issues Jira comme les Tests.
 * Créer le Test (Jira)
 * POST Jira REST v3 …/rest/api/3/issue avec issuetype={name:"Test"}, summary, labels, description (ADF) ; récupérer issueKey. Les contenus riches doivent être en ADF en v3. 
