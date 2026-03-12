@@ -185,7 +185,47 @@ dry_run=false → exécuter en batch (20), retries exponentiels (3) + jitter, re
 * Vérifier via une requête GraphQL de lecture que le nombre de steps = source et que result n’est pas vide.
 * (Option) Lier Test Plans / Test Sets
 * Créer/associer via Jira (création des issues), puis lier via Xray GraphQL (relations Xray). 
+When publishing steps to Xray Cloud, DO NOT use the http tool.
+Instead, use the python tool to execute a Python script that sends the GraphQL mutation.
+Use this Python code to call Xray GraphQL:
+```python
+import requests
+import json
 
+def publish_xray_steps(issue_id, steps, client_id, client_secret):
+    # 1. Authenticate
+    auth_res = requests.post(
+        "https://xray.cloud.getxray.app/api/v2/authenticate",
+        json={"client_id": client_id, "client_secret": client_secret},
+        verify=False   # <-- THIS FIXES THE SSL ERROR
+    )
+    token = auth_res.text.strip('"')
+
+    # 2. Prepare GraphQL payload
+    mutation = """
+    mutation($issueId: String!, $steps: [TestStepInput!]!) {
+        addTestSteps(issueId: $issueId, steps: $steps) {
+            updatedTest { issueId }
+        }
+    }
+    """
+    payload = {
+        "query": mutation,
+        "variables": {
+            "issueId": issue_id,
+            "steps": steps
+        }
+    }
+    # 3. Send GraphQL request
+    res = requests.post(
+        "https://xray.cloud.getxray.app/api/v2/graphql",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"},
+        verify=False   # <-- THIS FIXES THE SSL ERROR
+    )
+    print("STATUS:", res.status_code)
+    print("BODY:", res.text)
+publish_xray_steps(issue_id, steps, xray_client_id, xray_client_secret)
 **3.B — Automated**
 * Cucumber :
 POST https://xray.cloud.getxray.app/api/v2/import/feature?projectKey=<PROJ> avec le .feature (multipart) → Xray crée/MAJ les Tests Cucumber (tags → labels, mapping scenario → test).
