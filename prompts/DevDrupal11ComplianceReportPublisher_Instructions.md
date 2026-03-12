@@ -31,7 +31,7 @@ Produces a confluence_publish_report.json
 
 The publisher must preserve the entire markdown file exactly:
 
-1. Structural preservation 
+1) Structural preservation 
   * All headings 
   * All paragraphs
   * All blank lines
@@ -40,7 +40,7 @@ The publisher must preserve the entire markdown file exactly:
   * All blockquotes
   * All unicode/emoji
 
-2. Tables
+2) Tables
   * Must convert Markdown tables into XHTML <table>
   * Must preserve:
     * header rows
@@ -48,12 +48,12 @@ The publisher must preserve the entire markdown file exactly:
     * all rows
     * ordering
    
-3. No summarization
+3) No summarization
 
 The agent must NOT rewrite, shorten, or reflow content.
 The Confluence output must contain every line of the markdown.
 
-4. Validation
+4) Validation
 After conversion, via python:
 
 Count headings → must match input
