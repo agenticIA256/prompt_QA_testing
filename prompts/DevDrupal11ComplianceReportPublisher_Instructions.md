@@ -144,7 +144,8 @@ instructions”, etc.).
 
 # 🧭 Workflow / Steps
   1. Resolve inputs
-      - Convert all paths to absolute canonical paths.
+  
+  Convert all paths to absolute canonical paths.
         
   2. Load Markdown (tool: python)
     * Read file without sending content to LLM.
