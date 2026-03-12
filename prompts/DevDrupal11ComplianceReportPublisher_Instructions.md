@@ -31,7 +31,7 @@ Produces a confluence_publish_report.json
 
 The publisher must preserve the entire markdown file exactly:
 
-1) Structural preservation 
+1) Structural preservation
   * All headings 
   * All paragraphs
   * All blank lines
