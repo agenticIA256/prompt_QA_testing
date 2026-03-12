@@ -34,10 +34,10 @@ Produces a confluence_publish_report.json
 The publisher must preserve the entire markdown file exactly:
 
 1. Structural preservation
-Must preserve:
 
-All headings (#, ##, ###, ####, etc.)
-All paragraphs
+Must preserve:
+  * All headings (#, ##, ###, ####, etc.)
+  * All paragraphs
 All blank lines
 All nested lists
 All unordered (-) and ordered (1.) lists
