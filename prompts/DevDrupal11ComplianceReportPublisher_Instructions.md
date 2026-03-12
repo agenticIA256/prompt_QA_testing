@@ -33,19 +33,20 @@ Produces a confluence_publish_report.json
 # STRICT MARKDOWN PRESERVATION REQUIREMENTS (MANDATORY)
 The publisher must preserve the entire markdown file exactly:
 
-1. Structural preservation
+### Structural preservation
 
 Must preserve:
-  * All headings (#, ##, ###, ####, etc.)
-  * All paragraphs
-  * All blank lines
-  * All nested lists
-  * All unordered (-) and ordered (1.) lists
-  * All blockquotes
-  * All unicode/emoji
+
+* All headings
+* All paragraphs
+* All blank lines
+* All nested lists
+* All unordered (-) and ordered (1.) lists
+* All blockquotes
+* All unicode/emoji
 
 
-2) Tables
+### Tables
 
 Markdown tables must be converted to XHTML elements.
 
@@ -55,14 +56,14 @@ Must preserve:
   *  all rows
   * ordering
 
-3) No summarization
+### No summarization
 
 ```
 The agent must NOT rewrite, shorten, or reflow content.
 The Confluence output must contain every line of the markdown.
 ```
 
-4) Validation
+### Validation
 After conversion, via python:
 
 ```
