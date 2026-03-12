@@ -1,5 +1,7 @@
 Inputs:
-- working_directory (string): directory containing the audit artifacts.
+```
+working_directory (string): directory containing the audit artifacts.
+```
 
 Expected files inside the working_directory:
 - drupal11_audit_report.md
