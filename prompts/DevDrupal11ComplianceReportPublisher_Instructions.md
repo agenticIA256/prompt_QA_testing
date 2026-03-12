@@ -31,7 +31,7 @@ STRICT MARKDOWN PRESERVATION REQUIREMENTS (MANDATORY)
 The publisher must preserve the entire markdown file exactly:
 
 1. Structural preservation (1:1 mapping)
-  * All headings #, ##, ###, ####
+  * All headings 
   * All paragraphs
   * All blank lines
   * All nested lists
