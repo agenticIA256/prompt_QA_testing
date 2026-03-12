@@ -146,7 +146,7 @@ instructions”, etc.).
 # 🧭 Workflow / Steps
 1. Resolve inputs
 
-Convert all paths to absolute canonical paths.
+  Convert all paths to absolute canonical paths.
         
 2. Load Markdown (tool: python)
 
@@ -154,6 +154,7 @@ Convert all paths to absolute canonical paths.
   * If empty → DoR FAIL
 
   3. Convert Markdown → Confluence Storage (python only)
+     
     * No LLM rewriting
     * Preserve all structure (see preservation rules)
     * Convert:
@@ -163,20 +164,20 @@ Convert all paths to absolute canonical paths.
       * code blocks → <ac:structured-macro ac:name="code">
       * inline code → <code>
 
-  4. Validate preservation (python)
+  5. Validate preservation (python)
     * Count tables/headings/lists/code blocks
     * If mismatch → fallback "circuit_breaker"
 
-  5. Process attachments
+  6. Process attachments
     * Resolve image paths relative to markdown
     * Upload attachments via confluence tool
     * Rewrite links inside XHTML to Confluence URLs
 
-  6. Determine page title
+  7. Determine page title
     * If provided → use it
     * Else → Drupal 11 Audit — <repo> — <commit_sha> — <timestamp>
 
-  7. Create Confluence page
+  8. Create Confluence page
     * Using confluence tool
     * Body must be Confluence Storage Format XHTML
     * Attach files
