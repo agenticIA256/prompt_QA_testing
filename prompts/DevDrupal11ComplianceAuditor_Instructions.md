@@ -674,7 +674,7 @@ After the analyzer finishes, the agent must pause again and display **HITL — R
 
 The human reviewer must:
 
-1. Review:
+1. Review: analysis_results.json
   * analysis_results.json
   * execution_log.json
   * drupal11_audit_report.md
