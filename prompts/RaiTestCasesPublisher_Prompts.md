@@ -177,7 +177,60 @@ dry_run=false → exécuter en batch (20), retries exponentiels (3) + jitter, re
 * Créer le Test (Jira)
 * POST Jira REST v3 …/rest/api/3/issue avec issuetype={name:"Test"}, summary, labels, description (ADF) ; récupérer issueKey. Les contenus riches doivent être en ADF en v3. 
 * Relier les Pre‑Conditions au Test (Xray)
-* Xray GraphQL : créer les liens Pre‑Condition → Test (relation gérée côté Xray GraphQL). 
+* Xray GraphQL : créer les liens Pre‑Condition → Test (relation gérée côté Xray GraphQL).
+* - Après avoir créé l'issue Test dans Jira, tu DOIS créer les steps Xray en appelant explicitement le tool `python`.
+  N'utilise PAS le tool `http` (il force verify=True et échoue avec Xray Cloud SSL).
+  Tu DOIS exécuter le script Python ci-dessous via `python.run`.
+  C’est une étape obligatoire du workflow.
+
+  Pour cela :
+  1. Prépare la variable issue_id (clé du Test Jira, ex: "KAN-209")
+  2. Prépare la variable steps sous forme de liste Python :
+        [{"action": "...", "data": "...", "result": "..."}]
+  3. Appelle le tool python comme ceci :
+
+  python.run:
+    code: |
+        import requests
+        import json
+
+        def publish_xray_steps(issue_id, steps, client_id, client_secret):
+            auth_res = requests.post(
+                "https://xray.cloud.getxray.app/api/v2/authenticate",
+                json={"client_id": client_id, "client_secret": client_secret},
+                verify=False
+            )
+            token = auth_res.text.strip('"')
+
+            mutation = '''
+            mutation($issueId: String!, $steps: [TestStepInput!]!) {
+                addTestSteps(issueId: $issueId, steps: $steps) {
+                    updatedTest { issueId }
+                }
+            }
+            '''
+
+            payload = {
+                "query": mutation,
+                "variables": {
+                    "issueId": issue_id,
+                    "steps": steps
+                }
+            }
+
+            res = requests.post(
+                "https://xray.cloud.getxray.app/api/v2/graphql",
+                json=payload,
+                headers={"Authorization": f"Bearer {token}"},
+                verify=False
+            )
+
+            print("STATUS:", res.status_code)
+            print("BODY:", res.text)
+
+        publish_xray_steps(issue_id, steps, xray_client_id, xray_client_secret)
+
+  Tu DOIS appeler ce bloc python.run pour chaque Test créé.
 * Créer les Steps Xray (action / data / expected)
 * Auth Xray → POST /api/v2/authenticate pour obtenir un Bearer. 
 * GraphQL Xray : créer/mettre à jour les steps du Test (un appel par lot ou itératif) avec action, data, result (= expected_result).
@@ -187,45 +240,7 @@ dry_run=false → exécuter en batch (20), retries exponentiels (3) + jitter, re
 * Créer/associer via Jira (création des issues), puis lier via Xray GraphQL (relations Xray). 
 When publishing steps to Xray Cloud, DO NOT use the http tool.
 Instead, use the python tool to execute a Python script that sends the GraphQL mutation.
-Use this Python code to call Xray GraphQL:
-```python
-import requests
-import json
 
-def publish_xray_steps(issue_id, steps, client_id, client_secret):
-    # 1. Authenticate
-    auth_res = requests.post(
-        "https://xray.cloud.getxray.app/api/v2/authenticate",
-        json={"client_id": client_id, "client_secret": client_secret},
-        verify=False   # <-- THIS FIXES THE SSL ERROR
-    )
-    token = auth_res.text.strip('"')
-
-    # 2. Prepare GraphQL payload
-    mutation = """
-    mutation($issueId: String!, $steps: [TestStepInput!]!) {
-        addTestSteps(issueId: $issueId, steps: $steps) {
-            updatedTest { issueId }
-        }
-    }
-    """
-    payload = {
-        "query": mutation,
-        "variables": {
-            "issueId": issue_id,
-            "steps": steps
-        }
-    }
-    # 3. Send GraphQL request
-    res = requests.post(
-        "https://xray.cloud.getxray.app/api/v2/graphql",
-        json=payload,
-        headers={"Authorization": f"Bearer {token}"},
-        verify=False   # <-- THIS FIXES THE SSL ERROR
-    )
-    print("STATUS:", res.status_code)
-    print("BODY:", res.text)
-publish_xray_steps(issue_id, steps, xray_client_id, xray_client_secret)
 **3.B — Automated**
 * Cucumber :
 POST https://xray.cloud.getxray.app/api/v2/import/feature?projectKey=<PROJ> avec le .feature (multipart) → Xray crée/MAJ les Tests Cucumber (tags → labels, mapping scenario → test).
