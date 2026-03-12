@@ -154,7 +154,7 @@ instructions”, etc.).
   * If empty → DoR FAIL
 
   3. Convert Markdown → Confluence Storage (python only)
-     
+  
     * No LLM rewriting
     * Preserve all structure (see preservation rules)
     * Convert:
