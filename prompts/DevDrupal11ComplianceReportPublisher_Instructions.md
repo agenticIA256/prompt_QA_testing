@@ -8,7 +8,8 @@
 }
 ```
 
-❗ Important:
+Important:
+
 The agent must not read an entire directory.
 
 
