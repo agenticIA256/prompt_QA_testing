@@ -114,7 +114,7 @@ working_directory/publisher/<timestamp>/
 ```
 
 * **confluence_publish_report.json**
- - summarizing publishing results  
+     - summarizing publishing results  
 * **execution_log.json**
 
 
