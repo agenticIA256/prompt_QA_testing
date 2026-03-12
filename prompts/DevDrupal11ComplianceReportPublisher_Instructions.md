@@ -41,7 +41,6 @@ The publisher must preserve the entire markdown file exactly:
   * All unordered and ordered lists
   * All blockquotes
   * All unicode/emoji
-
 2) Tables
   - Must convert Markdown tables into XHTML <table>
   - Must preserve:
