@@ -154,3 +154,33 @@ instructions”, etc.).
 6. Validate links and document structure.
 7. Produce `confluence_publish_report.json` in the working_directory.
 8. Append a Task Execution Report listing API calls and processed files.
+
+# 📦 Outputs / Artifacts
+Stored in:
+```
+./data/runs/compliance/<timestamp>/
+```
+
+* **analysis_results.json**
+Deterministic structured JSON.
+  
+* **drupal11_audit_report.md**
+Human-readable report containing:
+    - Executive summary
+    - Compliance score
+    - Findings (from JSON)
+    - DoR/HITL checklist
+    - Task Execution Report
+      
+* **execution_log.json**
+Full metadata + compliance score.
+
+
+
+
+
+# 🔙 Return
+Return the absolute run directory:
+```
+./data/runs/compliance/<timestamp>/
+```
