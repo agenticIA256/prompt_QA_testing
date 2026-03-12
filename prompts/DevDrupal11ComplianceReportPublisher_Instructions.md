@@ -113,10 +113,8 @@ Stored in:
 working_directory/publisher/<timestamp>/
 ```
 
-* **confluence_publish_report.json**
-     - summarizing publishing results  
+* **confluence_publish_report.json** (summarizing publishing results)
 * **execution_log.json**
-
 
 # 🔙 Return
 Return the absolute run directory:
