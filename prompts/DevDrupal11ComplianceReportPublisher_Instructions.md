@@ -1,6 +1,6 @@
 Inputs:
 ```
-working_directory (string): directory containing the audit artifacts.
+working_directory (string)
 ```
 
 Expected files inside the working_directory:
