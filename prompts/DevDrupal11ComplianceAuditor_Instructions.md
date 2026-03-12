@@ -642,7 +642,7 @@ print(f"[Step 3] Updated execution log: {elog_path}")
 
 ## 🧑‍⚖️ Step 4 – HITL
 ### 4.0 — Create hitl_status.json ###
-The agent must create or overwrite the file:
+The agent must create the file:
 ```json
 {
   "hitl_validation": {
