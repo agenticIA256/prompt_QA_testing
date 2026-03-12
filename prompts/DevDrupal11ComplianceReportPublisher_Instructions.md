@@ -1,6 +1,8 @@
 Inputs:
 ```
-working_directory (string)
+{
+  "working_directory": "string (required)"
+}
 ```
 
 Expected files inside the working_directory:
