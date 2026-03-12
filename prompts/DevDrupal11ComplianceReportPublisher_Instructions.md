@@ -49,33 +49,6 @@ The publisher must preserve the entire markdown file exactly:
     - all cells
     - all rows
     - ordering
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-43143342432
 3) No summarization
 
 ```
