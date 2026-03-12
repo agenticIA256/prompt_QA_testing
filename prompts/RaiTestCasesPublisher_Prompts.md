@@ -42,8 +42,7 @@
   * If the project is not “Xray‑enabled” (e.g., *Test* issue type missing), the agent **fails DoR** and exits cleanly (no publish calls).
 
 - **Tools allowed**: `<python | http | jira>`
-  * `jira`: **Jira REST v3** calls (create/read issues).
-  * `http`: **Xray Cloud REST v2** calls (e.g., `.feature` import) and **Xray GraphQL** calls (manual Steps CRUD) after the *Test* issue is created.
+ 
 
 - **HITL Notes**:
   * The Orchestrator will pause after **GENERATION** (DoR check),
