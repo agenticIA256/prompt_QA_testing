@@ -733,9 +733,6 @@ Human-readable report containing:
 * **execution_log.json**
 Full metadata + compliance score.
     
-* **hitl_status.json**
-HITL state.
-
 # 🛠️ Tooling  (strict)
 The static analyzer script MUST be generated at:
 ```
