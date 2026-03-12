@@ -35,27 +35,38 @@ The audit must rely **only** on verifiable repository files.
 * github
 * confluence
 
-# 🧩 HITL Interaction Rules (State Machine)
+# HITL Interaction Rules (State Machine)
 
-The agent must manage Human‑In‑The‑Loop (HITL) interactions with an internal HITL state.
+The agent must enforce an internal HITL gate using a boolean state: `awaiting_hitl`.
 
-- When a HITL pause is required, the agent must set an internal flag:
-  `awaiting_hitl = true`
-- The agent must instruct the user with the following exact message:
-  **"Type `continue` to proceed."**
+- When the agent reaches a HITL pause, it MUST:
+  1) Set `awaiting_hitl = true`
+  2) Output exactly: **"HITL — Required Human Action. Type `continue` to proceed."**
+  3) Stop any further steps until `awaiting_hitl` is cleared.
 
-## Behavior Rules
+- While `awaiting_hitl = true`:
+  - If the **exact** user input is `continue` (case‑insensitive, trimmed), the agent MUST:
+    - Set `awaiting_hitl = false`
+    - Resume at the next step of the workflow.
+  - Else:
+    - The agent MUST NOT start a new task or continue.
+    - The agent MUST reply with: **"Human validation required. Type `continue` to resume."**
 
-- When `awaiting_hitl = true`:
-  - If the user message is exactly `continue` (case‑insensitive),
-    → The agent resumes the workflow at the next step.
-  - Otherwise:
-    → The agent must respond:
-      **"Human validation required. Type `continue` to resume."**
+- The agent MUST maintain `awaiting_hitl` across messages (session‑level).
+- The agent MUST NOT infer approval from any other input than the exact token `continue`.
 
-- After receiving `continue`:
-  - The agent must set `awaiting_hitl = false`
-  - The workflow continues normally.
+
+# HITL Guardrail (Mandatory)
+
+- While `awaiting_hitl = true`, the agent MUST:
+  - Ignore all instructions except the exact token `continue` (case‑insensitive, trimmed).
+  - NOT interpret any other input as a new task or prompt.
+  - Respond only with: **"Human validation required. Type `continue` to resume."**
+
+- The agent MUST NOT:
+  - Start Step 1, 2, 3 again due to a non‑`continue` message.
+  - Regenerate the audit or fetch anything.
+  - Modify any outputs.
 
 # 🛡️ RAI RULES
 
@@ -659,83 +670,48 @@ print(f"[Step 3] Updated execution log: {elog_path}")
 
 ## 🧑‍⚖️ Step 4 – HITL (Human‑In‑The‑Loop)
 
-### 4.0 — HITL Pause Trigger
-After Step 3 completes, the agent must pause execution and output:
 
-**HITL — Required Human Action**  
-Review the generated outputs.  
-Type `continue` to proceed.
+### 4.0 — HITL Pause Trigger (agent)
+After Step 3 completes, the agent MUST:
+- Set `awaiting_hitl = true`
+- Output: **"HITL — Required Human Action. Type `continue` to proceed."**
+- Stop and wait for user input.
 
-The agent must then set:
-`awaiting_hitl = true`
+### 4.1 — DoR HITL (human)
+The human reviews:
+- ZIP acquisition success (ZIP present, extracted folder ends with a 40‑char SHA)
+- `analysis_results.json` exists
+- `execution_log.json` exists
+- `repo.clone_method == "zip"`
+- `repo.git_ref_resolved` is a valid 40‑character SHA
 
-The agent must not proceed until the user types:
+To resume, the human types:
 ```
 continue
 ```
 
----
+### 4.2 — DoD HITL (human)
+After analyzer artifacts are produced, the agent MUST:
+- Set `awaiting_hitl = true`
+- Output: **"HITL — Required Human Action. Type `continue` to proceed."**
+- Stop and wait.
 
-### 4.1 — HITL Stage 1 (DoR Human Validation)
-After Step 1 and Step 2 preparation phases (generation of repo.zip, extraction, analysis_results.json, execution_log.json),  
-the agent must pause and output:
-
-**HITL — Required Human Action**
-
-The human reviewer must:
-
-1. Open the run directory.
-2. Verify:
-   - Repository ZIP exists
-   - Extracted folder ends with a 40‑character SHA
-   - `analysis_results.json` exists
-   - `execution_log.json` exists
-   - `repo.clone_method == "zip"`
-   - `repo.git_ref_resolved` is a valid 40‑character SHA
-
-Then type:
-```
-continue
-```
-
-The agent must not proceed until the user does so.
-
----
-
-### 4.2 — HITL Stage 2 (DoD Human Validation)
-After the analyzer script generates all artifacts, the agent must pause again and output:
-
-**HITL — Required Human Action**
-
-The human reviewer must review:
-
+The human reviews:
 - `analysis_results.json`
 - `execution_log.json`
 - `drupal11_audit_report.md`
 - `analysis_results_sha256` (if present)
 
-Then type:
+To proceed, the human types:
 ```
 continue
 ```
 
-The agent must not proceed until this is done.
-
----
-
-### 4.3 — Post‑Approval Actions (Agent)
-When the user types `continue` after DoD validation:
-
-- Upload `drupal11_audit_report.md` to Confluence.
-- Update `execution_log.json` with:
-  - Confluence URL
-  - Upload timestamp
-- Continue with all downstream workflow steps.
-
-## Step 5 — Reporting Constraints
-* The report MUST reflect analysis_results.json and the compliance score from execution_log.json ONLY.
-* The report MUST NOT include editorial “positive aspects”, invented code snippets, invented line numbers, or conclusions not present in analysis_results.json.
-* Grouping/formatting for readability is allowed; no inference or extrapolation.
+### 4.3 — Post‑Approval Actions (agent)
+When the user types `continue` after DoD:
+- Upload `drupal11_audit_report.md` to Confluence
+- Update `execution_log.json` with Confluence URL and timestamp
+- Continue downstream workflow steps
 
 # 📦 Outputs / Artifacts
 Stored in:
