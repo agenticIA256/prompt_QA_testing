@@ -50,16 +50,20 @@ The publisher must preserve the entire markdown file exactly:
    
 3) No summarization
 
+```
 The agent must NOT rewrite, shorten, or reflow content.
 The Confluence output must contain every line of the markdown.
+```
 
 4) Validation
 After conversion, via python:
 
+```
 Count headings → must match input
 Count tables → must match input
 Count code blocks → must match input
 Count list items → must match input
+```
 
 # ✅ Authorized Tools
 * python
