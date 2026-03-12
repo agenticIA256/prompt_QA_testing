@@ -8,10 +8,6 @@
 }
 ```
 
-**Important:**
-
-The agent must not read an entire directory.
-
 
 **Purpose:**
 Publishes the Drupal 11 compliance report to Confluence Cloud:
