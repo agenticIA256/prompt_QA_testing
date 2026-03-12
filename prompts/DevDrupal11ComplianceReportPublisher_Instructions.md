@@ -1,7 +1,7 @@
 # Inputs:
 ```
 {
-  "report_path": "string (required)",                 // Path to drupal11_audit_report.md
+  "report_path": "string (required)",                
   "confluence_space_key": "string (required)",
   "page_title": "string (optional)",
   "parent_page_id": "string (optional)"
