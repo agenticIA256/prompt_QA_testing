@@ -38,21 +38,25 @@ The publisher must preserve the entire markdown file exactly:
 Must preserve:
   * All headings (#, ##, ###, ####, etc.)
   * All paragraphs
-All blank lines
-All nested lists
-All unordered (-) and ordered (1.) lists
-All blockquotes
-All unicode/emoji
+  * All blank lines
+  * All nested lists
+  * All unordered (-) and ordered (1.) lists
+  * All blockquotes
+  * All unicode/emoji
+
+
 2) Tables
-  - Must convert Markdown tables into XHTML <table>
-  - Must preserve:
+
+Markdown tables must be converted to XHTML <table> elements.
+
+Must preserve:
     ```
     - header rows
     - all cells
     - all rows
     - ordering
     ```
-3) No summarization
+4) No summarization
 
 ```
 The agent must NOT rewrite, shorten, or reflow content.
