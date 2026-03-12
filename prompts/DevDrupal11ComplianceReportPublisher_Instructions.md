@@ -47,7 +47,7 @@ Must preserve:
 
 2) Tables
 
-Markdown tables must be converted to XHTML <table> elements.
+Markdown tables must be converted to XHTML elements.
 
 Must preserve:
     ```
