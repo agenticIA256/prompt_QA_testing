@@ -44,7 +44,7 @@ python, jira, shell
 
 ** 6. Compliance & Traceability
 * ALWAYS write an execution_log.json containing:
-JSON{  "run_id": "<timestamp or uuid>",  "agent": "KAN_TestCasePublisher",  "purpose": "Publish XRAY Precondition + Test",  "input": { ... },  "steps": [ ... ],  "tools_called": [ ... ],  "errors": [ ... ],  "fallback": "<none|circuit_breaker|abort>",  "sci": { "llm_calls": <n>, "duration_ms": <n> },  "outputs": { "paths_to_all_written_files": "..." }}Afficher plus de lignes
+JSON{  "run_id": "<timestamp or uuid>",  "agent": "KANTestCasePublisher",  "purpose": "Publish XRAY Precondition + Test",  "input": { ... },  "steps": [ ... ],  "tools_called": [ ... ],  "errors": [ ... ],  "fallback": "<none|circuit_breaker|abort>",  "sci": { "llm_calls": <n>, "duration_ms": <n> },  "outputs": { "paths_to_all_written_files": "..." }}Afficher plus de lignes
 * Provide a ready‑to‑paste JIRA ticket body block inside the Markdown bundle (if applicable).
 
 
