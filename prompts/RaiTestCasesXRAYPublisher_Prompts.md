@@ -64,25 +64,61 @@ JSON{  "run_id": "<timestamp or uuid>",  "agent": "KANTestCasePublisher",  "purp
 
 
 # WORKFLOW / STEPS
-1- Lire et valider le fichier test_cases.json.
-2- Pour chaque test case :
-* Créer une issue XRAY de type Precondition dans le projet project_key.
-* Titre = test_name
-* Description = contenu du champ preconditions du JSON
-3- Créer ensuite une issue XRAY de type Test, avec :
-* Description =
-    - expected_outcome + scenario_id + risk + acceptance_criteria
-    - Lien Precondition = référence de l’issue Precondition précédemment créée
-* Steps XRAY :
-    - action = step.action
-    - data = step.test_data.url uniquement
-    - expected_result = step.expected_result
-4- Écrire dans ./data/runs/publish/<timestamp>/ :
+1. Lire et valider le fichier test_cases.json
+* Vérifier structure JSON
+* Vérifier présence des champs obligatoires
+* Refuser si JSON mal formé
+
+2. Pour chaque test case : créer un Precondition XRAY (issuetype = "Precondition")
+* L’agent doit appeler : jira.create_issue()
+* Le Precondition XRAY doit contenir :
+project = project_key
+issuetype = "Precondition"
+summary = test_name
+description = contenu exact du champ preconditions
+
+* Aucune simulation autorisée : si l’outil “jira” n’est pas appelé → FAIL.
+→ Stocker la clé retournée (ex: "KAN-1234") dans xray_responses.json.
+
+3. Créer un Test XRAY (issuetype = "Test")
+L’agent doit appeler : jira.create_issue()
+Le Test doit contenir :
+project = project_key
+issuetype = "Test"
+summary = nom du test
+description = concaténation :
+expected_outcome
+scenario_id
+risk_id et severity
+acceptance_criteria (liste formatée)
+precondition = issue key du Precondition précédemment créé
+→ Stocker la clé retournée (ex: "KAN-5678") dans xray_responses.json.
+4. Ajouter les Steps XRAY au Test
+L’agent doit appeler : jira.add_test_steps()
+Pour chaque step du JSON :
+action = step.action
+data = step.test_data.url uniquement
+expected_result = step.expected_result
+
+→ Enregistrer la réponse XRAY dans xray_responses.json.
+
+5. Écrire les artefacts dans :
+./data/runs/publish/<timestamp>/
+
+Obligatoire :
 * execution_log.json
-* xray_payloads.json (payloads envoyés)
-* xray_responses.json (réponses Jira)
-5- Générer un résumé Markdown de la publication.
-6- Injecter les DoR / DoD dans le bundle Markdown (si requis).
+* xray_payloads.json (payload EXACT envoyé à Jira)
+* xray_responses.json (réponse EXACTE de Jira → DOIT contenir les issue keys)
+* trace.csv (test_case_id → precondition_key → test_key)
+* summary.md
+
+
+6. Générer un résumé Markdown
+Incluant :
+* total créé
+* liste des JiraKeys réels
+* étapes effectuées
+* erreurs éventuelles
 
 # OUTPUTS / ARTEFACTS
  * xray_payloads.json — tous les payloads envoyés à XRAY
