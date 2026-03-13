@@ -221,6 +221,31 @@ Include:
 * execution timing
 * errors (if any)
 
+# REQUIRED FINAL OUTPUTS (MANDATORY)
+
+After publishing to Confluence, the agent MUST return the following fields
+IN ITS FINAL CHAT RESPONSE and also write them into both
+`confluence_publish_report.json` and `execution_log.json`:
+
+1) The EXACT Confluence page URL:
+   - Example format:
+     https://<site>.atlassian.net/wiki/spaces/<SPACE>/pages/<PAGE_ID>/<PAGE_TITLE>
+
+2) The Confluence Page ID (string of digits)
+
+3) The space key actually used (same as input.confluence_space_key)
+
+4) The absolute output directory created for the publisher:
+   <dirname(report_path)>/publisher/<timestamp>/
+
+Example expected return:
+
+Page URL:
+https://agentqa24.atlassian.net/wiki/spaces/MFS/pages/2654210/Test1
+
+Publisher output directory:
+/app/data/runs/compliance/20260312_204049/publisher/20260313_174210/
+
 # 📦 Outputs / Artifacts
 Stored in:
 
