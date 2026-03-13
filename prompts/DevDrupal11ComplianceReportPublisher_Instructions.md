@@ -9,6 +9,13 @@
   "parent_page_id": "string (optional)"
 }
 ```
+The field `parent_page_id` MUST be either:
+- a valid Confluence page ID (string of digits), OR
+- omitted entirely.
+
+The agent MUST NOT treat literal strings such as "string (optional)" as valid input.
+
+If parent_page_id is invalid → DoR FAIL.
 
 **Purpose:**
 Publishes the Drupal 11 compliance report to Confluence Cloud:
