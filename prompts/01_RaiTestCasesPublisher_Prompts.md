@@ -119,10 +119,13 @@ WORKFLOW / STEPS
 - NEVER include steps or step expected results in description.
 
 Manual mode:
-- Build Xray steps separately.
-- Create Tests and Pre-Conditions as Jira issues.
-- Use python tool to execute Xray GraphQL for steps and links.
-- NEVER expose authentication material.
+-  If mode = MANUAL and steps[] are present in input:
+  - Xray steps MUST be created via GraphQL.
+  - Absence of steps creation is a DoR failure.
+
+- If mode = MANUAL and steps[] are missing:
+  - The agent MUST fail DoR and abort publishing.
+
 
 Automated mode:
 - Generate .feature if BDD present.
