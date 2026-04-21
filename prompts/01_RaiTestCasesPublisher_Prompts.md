@@ -106,6 +106,15 @@ WORKFLOW / STEPS
 - Sanitize all inputs and redact PII.
 - DO NOT load any credential file or secret.
 
+- Call Jira CreateMeta API.
+- Validate that issue type "Test" is available for the target project.
+- Validate that Xray is enabled for the project.
+- If issue type "Test" is NOT available:
+  - Fail DoR
+  - Abort execution
+  - Do NOT create any Jira issue.
+
+
 2) Transform & Map (Xray)
 - Normalize test metadata (summary, labels, priority, locale).
 - Prepare business preconditions and expected outcomes.
@@ -116,16 +125,20 @@ WORKFLOW / STEPS
   * Business expected outcomes
   * Traceability links
   * Metadata
-- NEVER include steps or step expected results in description.
+- NEVER include steps or step expected results in the description.
 
 Manual mode:
--  If mode = MANUAL and steps[] are present in input:
-  - Xray steps MUST be created via GraphQL.
-  - Absence of steps creation is a DoR failure.
-
-- If mode = MANUAL and steps[] are missing:
-  - The agent MUST fail DoR and abort publishing.
-
+- If mode = MANUAL:
+  - steps[] MUST be present in input.
+- If steps[] are missing:
+  - Fail DoR
+  - Abort publishing.
+- Xray "Test" issue MUST be created successfully BEFORE any step creation.
+- Xray steps MUST be created via GraphQL.
+- Creation of steps in description is STRICTLY FORBIDDEN.
+- If step creation via GraphQL fails:
+  - Abort execution
+  - DoD = FAILED
 
 Automated mode:
 - Generate .feature if BDD present.
@@ -133,8 +146,11 @@ Automated mode:
 - Generic automated tests contain no steps.
 
 3) Publish
+- Create Jira issue with issue type = "Test" ONLY.
+- Abort if Jira returns any other issue type.
 - Execute publishing via secure, pre-authenticated runtime.
 - Batch operations and apply retries.
+
 
 4) Evidence & Linking
 - Collect created issue keys and URLs.
@@ -149,8 +165,20 @@ Automated mode:
 - errors.json if needed
 
 6) DoR/DoD Write-backs
-- Write completed DoR/DoD sections to Markdown.
+
+DoR:
+- Project supports Xray
+- Issue type "Test" available
+- MANUAL tests include steps[]
+
+DoD:
+- Issue type = Test
+- Steps created via Xray GraphQL (MANUAL)
+- Steps count > 0
+- No fallback issue types used
+- If any condition fails → DoD = FAILED
 - Pause for HITL.
+
 
 OUTPUTS / ARTEFACTS
 - jira_publisher_bundle.md : summary, evidence, Jira block, Task Execution Report, DoR/DoD
