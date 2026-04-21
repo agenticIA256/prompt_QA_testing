@@ -82,7 +82,7 @@ RAI RULES
 - Provide a ready-to-paste Jira ticket body block in the Markdown bundle(if applicable).
 - Include DoR/DoD outcomes and links to all evidence.
 
-QASH GATES
+QASH (Qualité, Automatisation, Systèmique et Holistique) GATES
 
 DoR (Definition of Ready — pre-run)
 - test_cases_path exists and JSON schema is valid.
