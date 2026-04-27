@@ -1,10 +1,8 @@
-
 **Inputs**:
 {
   "test_cases_path": string,
   "jira_server_url": string,
-  "jira_project_key": string,
-  "mode": "LIVE | DRY_RUN"
+  "jira_project_key": string
 }
 
 Use ./data as the working directory.
@@ -20,22 +18,6 @@ PURPOSE & SCOPE (Governance)
 * NO writes to Xray steps via customfield_*.
 * If the Jira project is not Xray-enabled, the agent MUST fail DoR and exit cleanly.
 * NO credential collection, prompting, logging, or storage.
-* MANUAL test steps MUST be created via Xray GraphQL ONLY.
-*********************
-* The agent MUST NOT:
-- generate standalone scripts
-- instruct the user to run code
-- request environment variables
-- prepare code “ready to execute”
-* The agent MUST execute publishing directly
-* using the pre-authenticated runtime.
-* Authentication is provided by the execution environment.
-* The agent MUST NOT:
-- request credentials
-- reference environment variables
-- validate tokens by name
-* The only allowed auth validation is: GET /rest/api/3/myself
-  
 
 - Tools allowed: <python | http | jira>
 
@@ -99,29 +81,15 @@ RAI RULES
 - Provide a ready-to-paste Jira ticket body block in the Markdown bundle(if applicable).
 - Include DoR/DoD outcomes and links to all evidence.
 
-QASH (Qualité, Automatisation, Systèmique et Holistique) GATES
+QASH GATES
 
 DoR (Definition of Ready — pre-run)
 - test_cases_path exists and JSON schema is valid.
 - Test cases respect naming conventions.
 - RISK ↔ AC ↔ SCENARIO ↔ CASE linkage validated if present.
+- Jira project exists and is Xray-enabled.
 - Execution environment confirms authentication readiness (out of agent scope).
 - Data & permissions ready.
-- Jira project exists
-
-- The Jira Issue Type with name "Test" MUST be resolved to its Jira ID
-  via the CreateMeta API BEFORE any issue creation.
-- Using issuetype.name = "Test" is FORBIDDEN.
-- If the Issue Type "Test" cannot be resolved to a Jira ID:
-    - DoR = FAILED
-    - execution = ABORT
-    - NO Jira issue MUST be created.
-
-- Xray is enabled for the project
- VERIFIED BY:
-     - GET /rest/api/3/myself
-     - GET /rest/api/3/issue/createmeta
-If ANY check fails: DoR = FAILED & execution = ABORT
 
 DoD (Definition of Done — post-run)
 - Outputs written successfully.
@@ -137,22 +105,6 @@ WORKFLOW / STEPS
 - Sanitize all inputs and redact PII.
 - DO NOT load any credential file or secret.
 
-- Call Jira CreateMeta API.
-- Resolve the Jira Issue Type ID for the issuetype named "Test".
-- Store the resolved Issue Type ID for later use.
-- Validate that Xray is enabled for the project.
-
-RULE:
-- The agent MUST use the resolved issuetype.id when creating Jira issues.
-- Using issuetype.name is STRICTLY FORBIDDEN.
-
-If the Issue Type ID cannot be resolved:
-- Fail DoR
-- Abort execution
-- Do NOT create any Jira issue.
-
-
-
 2) Transform & Map (Xray)
 - Normalize test metadata (summary, labels, priority, locale).
 - Prepare business preconditions and expected outcomes.
@@ -163,20 +115,16 @@ If the Issue Type ID cannot be resolved:
   * Business expected outcomes
   * Traceability links
   * Metadata
-- NEVER include steps or step expected results in the description.
+- NEVER include steps or step expected results in description.
 
 Manual mode:
-- If mode = MANUAL:
-  - steps[] MUST be present in input.
-- If steps[] are missing:
-  - Fail DoR
-  - Abort publishing.
-- Xray "Test" issue MUST be created successfully BEFORE any step creation.
-- Xray steps MUST be created via GraphQL.
-- Creation of steps in description is STRICTLY FORBIDDEN.
-- If step creation via GraphQL fails:
-  - Abort execution
-  - DoD = FAILED
+-  If mode = MANUAL and steps[] are present in input:
+  - Xray steps MUST be created via GraphQL.
+  - Absence of steps creation is a DoR failure.
+
+- If mode = MANUAL and steps[] are missing:
+  - The agent MUST fail DoR and abort publishing.
+
 
 Automated mode:
 - Generate .feature if BDD present.
@@ -184,11 +132,8 @@ Automated mode:
 - Generic automated tests contain no steps.
 
 3) Publish
-- Create Jira issue with issue type = "Test" ONLY.
-- Abort if Jira returns any other issue type.
 - Execute publishing via secure, pre-authenticated runtime.
 - Batch operations and apply retries.
-
 
 4) Evidence & Linking
 - Collect created issue keys and URLs.
@@ -203,20 +148,8 @@ Automated mode:
 - errors.json if needed
 
 6) DoR/DoD Write-backs
-
-DoR:
-- Project supports Xray
-- Issue type "Test" available
-- MANUAL tests include steps[]
-
-DoD:
-- Issue type = Test
-- Steps created via Xray GraphQL (MANUAL)
-- Steps count > 0
-- No fallback issue types used
-- If any condition fails → DoD = FAILED
+- Write completed DoR/DoD sections to Markdown.
 - Pause for HITL.
-
 
 OUTPUTS / ARTEFACTS
 - jira_publisher_bundle.md : summary, evidence, Jira block, Task Execution Report, DoR/DoD
@@ -227,4 +160,3 @@ OUTPUTS / ARTEFACTS
 
 RETURN
 - The absolute path to the run folder (./data/runs/publish_xray/<timestamp>/)
-
