@@ -3,7 +3,8 @@
 {
   "test_cases_path": string,
   "jira_server_url": string,
-  "jira_project_key": string
+  "jira_project_key": string,
+  "mode": "LIVE | DRY_RUN"
 }
 
 Use ./data as the working directory.
@@ -19,6 +20,8 @@ PURPOSE & SCOPE (Governance)
 * NO writes to Xray steps via customfield_*.
 * If the Jira project is not Xray-enabled, the agent MUST fail DoR and exit cleanly.
 * NO credential collection, prompting, logging, or storage.
+* MANUAL test steps MUST be created via Xray GraphQL ONLY.
+  
 
 - Tools allowed: <python | http | jira>
 
@@ -88,9 +91,15 @@ DoR (Definition of Ready — pre-run)
 - test_cases_path exists and JSON schema is valid.
 - Test cases respect naming conventions.
 - RISK ↔ AC ↔ SCENARIO ↔ CASE linkage validated if present.
-- Jira project exists and is Xray-enabled.
 - Execution environment confirms authentication readiness (out of agent scope).
 - Data & permissions ready.
+- Jira project exists
+- Issue type "Test" is available
+- Xray is enabled for the project
+ VERIFIED BY:
+     - GET /rest/api/3/myself
+     - GET /rest/api/3/issue/createmeta
+If ANY check fails: DoR = FAILED & execution = ABORT
 
 DoD (Definition of Done — post-run)
 - Outputs written successfully.
