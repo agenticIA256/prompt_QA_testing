@@ -21,6 +21,20 @@ PURPOSE & SCOPE (Governance)
 * If the Jira project is not Xray-enabled, the agent MUST fail DoR and exit cleanly.
 * NO credential collection, prompting, logging, or storage.
 * MANUAL test steps MUST be created via Xray GraphQL ONLY.
+*********************
+* The agent MUST NOT:
+- generate standalone scripts
+- instruct the user to run code
+- request environment variables
+- prepare code “ready to execute”
+* The agent MUST execute publishing directly
+* using the pre-authenticated runtime.
+* Authentication is provided by the execution environment.
+* The agent MUST NOT:
+- request credentials
+- reference environment variables
+- validate tokens by name
+* The only allowed auth validation is: GET /rest/api/3/myself
   
 
 - Tools allowed: <python | http | jira>
