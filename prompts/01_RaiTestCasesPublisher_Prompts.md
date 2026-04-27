@@ -108,7 +108,15 @@ DoR (Definition of Ready — pre-run)
 - Execution environment confirms authentication readiness (out of agent scope).
 - Data & permissions ready.
 - Jira project exists
-- Issue type "Test" is available
+
+- The Jira Issue Type with name "Test" MUST be resolved to its Jira ID
+  via the CreateMeta API BEFORE any issue creation.
+- Using issuetype.name = "Test" is FORBIDDEN.
+- If the Issue Type "Test" cannot be resolved to a Jira ID:
+    - DoR = FAILED
+    - execution = ABORT
+    - NO Jira issue MUST be created.
+
 - Xray is enabled for the project
  VERIFIED BY:
      - GET /rest/api/3/myself
@@ -130,12 +138,19 @@ WORKFLOW / STEPS
 - DO NOT load any credential file or secret.
 
 - Call Jira CreateMeta API.
-- Validate that issue type "Test" is available for the target project.
+- Resolve the Jira Issue Type ID for the issuetype named "Test".
+- Store the resolved Issue Type ID for later use.
 - Validate that Xray is enabled for the project.
-- If issue type "Test" is NOT available:
-  - Fail DoR
-  - Abort execution
-  - Do NOT create any Jira issue.
+
+RULE:
+- The agent MUST use the resolved issuetype.id when creating Jira issues.
+- Using issuetype.name is STRICTLY FORBIDDEN.
+
+If the Issue Type ID cannot be resolved:
+- Fail DoR
+- Abort execution
+- Do NOT create any Jira issue.
+
 
 
 2) Transform & Map (Xray)
