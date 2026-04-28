@@ -82,20 +82,19 @@ RAI RULES
 - Include DoR/DoD outcomes and links to all evidence.
 
 QASH GATES
-
-DoR (Definition of Ready — pre-run)
-- test_cases_path exists and JSON schema is valid.
-- Test cases respect naming conventions.
-- RISK ↔ AC ↔ SCENARIO ↔ CASE linkage validated if present.
-- Jira project exists and is Xray-enabled.
-- Execution environment confirms authentication readiness (out of agent scope).
+DoR (Definition of Ready — pre run)
+- Inputs validated.
+- Upstream artefacts present.
+- Naming conventions OK.
+- RISK ↔ AC ↔ SCENARIO linkage (if applicable).
 - Data & permissions ready.
 
-DoD (Definition of Done — post-run)
+DoD (Definition of Done — post run)
 - Outputs written successfully.
 - Evidence present (execution_log.json, screenshots, bundles).
 - E2E links ready for the Traceability Binder.
 - All RAI rules respected.
+
 
 WORKFLOW / STEPS
 
